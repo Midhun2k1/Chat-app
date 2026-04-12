@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
+from sqlalchemy import func, case
+
 
 from app.auth.dependencies import get_current_user
 from app.db.database import get_db
@@ -72,3 +74,89 @@ def get_messages(
     ).order_by(Message.fld_created_at.asc()).all()
 
     return messages
+
+
+@router.post("/messages/read/{conversation_id}")
+def mark_as_read(
+    conversation_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    db.query(Message).filter(
+        Message.fld_conversation_id == conversation_id,
+        Message.fld_sender_id != current_user.fld_user_id,
+        Message.fld_is_read == False
+    ).update({"fld_is_read": True})
+
+    db.commit()
+
+    return {"message": "Messages marked as read"}
+
+
+@router.get("/chats")
+def get_user_chats(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    user_id = current_user.fld_user_id
+
+    #get latest message per conversation
+    last_msg_subq = db.query(
+        Message.fld_conversation_id,
+        func.max(Message.fld_created_at).label("last_time")
+    ).group_by(Message.fld_conversation_id).subquery()
+
+    unread_subq = db.query(
+        Message.fld_conversation_id,
+        func.count(Message.fld_message_id).label("unread_count")
+    ).filter(
+        Message.fld_sender_id != user_id,
+        Message.fld_is_read == False
+    ).group_by(Message.fld_conversation_id).subquery()
+
+    cp1 = aliased(ConversationParticipant)
+    cp2 = aliased(ConversationParticipant)
+
+    chats = db.query(
+        cp1.fld_conversation_id,
+        User.fld_user_id,
+        User.fld_username,
+        Message.fld_message,
+        Message.fld_created_at,
+        func.coalesce(unread_subq.c.unread_count, 0)
+    ).join(
+        cp2,
+        (cp1.fld_conversation_id == cp2.fld_conversation_id) &
+        (cp2.fld_user_id != user_id)
+    ).join(
+        User,
+        User.fld_user_id == cp2.fld_user_id
+    ).join(
+        last_msg_subq,
+        last_msg_subq.c.fld_conversation_id == cp1.fld_conversation_id
+    ).join(
+        Message,
+        (Message.fld_conversation_id == last_msg_subq.c.fld_conversation_id) &
+        (Message.fld_created_at == last_msg_subq.c.last_time)
+    ).outerjoin(
+        unread_subq,
+        unread_subq.c.fld_conversation_id == cp1.fld_conversation_id
+    ).filter(
+        cp1.fld_user_id == user_id
+    ).order_by(
+        Message.fld_created_at.desc()
+    ).all()
+
+    result = []
+
+    for chat in chats:
+        result.append({
+            "conversation_id": chat[0],
+            "user_id": chat[1],
+            "username": chat[2],
+            "last_message": chat[3],
+            "timestamp": str(chat[4]),
+            "unread_count": chat[5]
+        })
+
+    return result

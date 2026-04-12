@@ -9,12 +9,12 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 engine = create_engine(DATABASE_URL)
 
-sessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 Base = declarative_base()
 
 def get_db():
-    db = sessionLocal()
+    db = SessionLocal()
     try:
         yield db
     finally:

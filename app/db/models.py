@@ -39,26 +39,30 @@ class ConversationParticipant(Base):
     fld_user_id = Column(Integer, ForeignKey("tbl_users.fld_user_id"))
 
 
-""" class Message(Base):
-    __tablename__ = "tbl_messages"
-
-    fld_message_Id = Column(Integer, primary_key=True, index=True)
-
-    fld_conversation_id = Column(Integer, ForeignKey("tbl_converssation.fld_conversation_Id"))
-    fld_sender_id = Column(Integer, ForeignKey("tbl_users.fld_user_id"))
-
-    fld_message = Column(Text, nullable=False)
-    fld_created_at = Column(DateTime, default=datetime.utcnow) """
-
-
 class Message(Base):
     __tablename__ = "tbl_messages"
 
     fld_message_id = Column(Integer, primary_key=True, index=True)
 
     fld_sender_id = Column(Integer, ForeignKey("tbl_users.fld_user_id"), nullable=False)
-    fld_receiver_id = Column(Integer, ForeignKey("tbl_users.fld_user_id"), nullable=False)
+    #fld_receiver_id = Column(Integer, ForeignKey("tbl_users.fld_user_id"), nullable=False)
     fld_conversation_id = Column(Integer, ForeignKey("tbl_converssation.fld_conversation_Id"))
+    client_message_id =  Column(String(100), nullable=False)
 
     fld_message = Column(String, nullable=False)
+    fld_is_read = Column(Boolean, default=False)  
+
+    fld_is_deleted_for_everyone = Column(Boolean, default=False)
+
     fld_created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class MessageDelete(Base):
+    __tablename__ = "tbl_message_deletes"
+
+    id = Column(Integer, primary_key=True)
+
+    message_id = Column(Integer, ForeignKey("tbl_messages.fld_message_id"))
+    user_id = Column(Integer, ForeignKey("tbl_users.fld_user_id"))
+
+    deleted_at = Column(DateTime, default=datetime.utcnow)
