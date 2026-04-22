@@ -31,7 +31,7 @@ async def handle_send_message(user_id: int, payload: dict, db: Session):
 
         server_timestamp = int(datetime.utcnow().timestamp())
 
-        #ACK to sender (important for optimistic UI)
+        # ACK to sender (important for optimistic UI)
         """ sender_ws = manager.active_connections.get(user_id)
         if sender_ws:
             await sender_ws.send_json({
@@ -57,8 +57,12 @@ async def handle_send_message(user_id: int, payload: dict, db: Session):
             ConversationParticipant.fld_conversation_id == conversation_id
         ).all()
 
-        #Broadcast message
+        # Broadcast message
         for p in participants:
+            # Skip sending the message back to the sender since they already got the ACK
+            if p.fld_user_id == user_id:
+                continue
+
             target_sockets = manager.active_connections.get(p.fld_user_id, [])
 
             for ws in target_sockets:
@@ -168,15 +172,16 @@ async def handle_presence(user_id: int, payload: dict):
         if status not in ["online", "offline"]:
             return
 
-        for uid, ws in manager.active_connections.items():
+        for uid, sockets in manager.active_connections.items():
             if uid != user_id:
-                await ws.send_json({
-                    "type": "PRESENCE",
-                    "payload": {
-                        "userId": str(user_id),
-                        "status": status
-                    }
-                })
+                for ws in sockets:
+                    await ws.send_json({
+                        "type": "PRESENCE",
+                        "payload": {
+                            "userId": str(user_id),
+                            "status": status
+                        }
+                    })
 
     except Exception as e:
         print("PRESENCE ERROR:", e)
@@ -209,28 +214,27 @@ async def handle_edit_message(user_id: int, payload: dict, db: Session):
         db.commit()
 
         # ACK sender
-        sender_ws = manager.active_connections.get(user_id)
-        if sender_ws:
-            for sockets in manager.active_connections.values():
-                for ws in sockets:
-                    await sender_ws.send_json({
-                        "type": "ACK_EDIT_MSG",
-                        "payload": {
-                            "id": str(message_id),
-                            "editedAt": int(datetime.utcnow().timestamp())
-                        }
-                    })
-
-        # Broadcast edit
-        for ws in manager.active_connections.values():
+        sender_sockets = manager.active_connections.get(user_id, [])
+        for ws in sender_sockets:
             await ws.send_json({
-                "type": "RECEIVE_EDIT_MSG",
+                "type": "ACK_EDIT_MSG",
                 "payload": {
                     "id": str(message_id),
-                    "text": new_text,
-                    "editedAt": edited_at
+                    "editedAt": int(datetime.utcnow().timestamp())
                 }
             })
+
+        # Broadcast edit
+        for sockets in manager.active_connections.values():
+            for ws in sockets:
+                await ws.send_json({
+                    "type": "RECEIVE_EDIT_MSG",
+                    "payload": {
+                        "id": str(message_id),
+                        "text": new_text,
+                        "editedAt": edited_at
+                    }
+                })
 
     except Exception as e:
         print("EDIT_MSG ERROR:", e)
@@ -270,9 +274,9 @@ async def handle_delete_message(user_id: int, payload: dict, db: Session):
             db.add(new_delete)
 
         # ACK sender
-        sender_ws = manager.active_connections.get(user_id)
-        if sender_ws:
-            await sender_ws.send_json({
+        sender_sockets = manager.active_connections.get(user_id, [])
+        for ws in sender_sockets:
+            await ws.send_json({
                 "type": "ACK_DELETE_MSG",
                 "payload": {
                     "id": str(message_id),
@@ -281,15 +285,16 @@ async def handle_delete_message(user_id: int, payload: dict, db: Session):
             })
 
         # Broadcast delete
-        for ws in manager.active_connections.values():
-            await ws.send_json({
-                "type": "RECEIVE_DELETE_MSG",
-                "payload": {
-                    "id": str(message_id),
-                    "deleteType": delete_type,
-                    "deletedAt": deleted_at
-                }
-            })
+        for sockets in manager.active_connections.values():
+            for ws in sockets:
+                await ws.send_json({
+                    "type": "RECEIVE_DELETE_MSG",
+                    "payload": {
+                        "id": str(message_id),
+                        "deleteType": delete_type,
+                        "deletedAt": deleted_at
+                    }
+                })
 
     except Exception as e:
-        print(" DELETE_MSG ERROR:", e)
+        print("DELETE_MSG ERROR:", e)
