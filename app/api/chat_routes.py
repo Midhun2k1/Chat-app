@@ -6,13 +6,15 @@ from sqlalchemy import func, case
 from app.auth.dependencies import get_current_user
 from app.db.database import get_db
 from app.db.models import Conversation, ConversationParticipant, Message, User, MessageDelete
-from app.utils.response_utils import success_response
+from app.schemas.response import StandardResponse
+from app.schemas.conversation import ConversationID, ChatList
+from app.schemas.message import MessageList
 
 
 router = APIRouter()
 
 
-@router.post("/conversation/{user_id}")
+@router.post("/conversation/{user_id}", response_model=StandardResponse[ConversationID])
 def create_or_get_conversation(
     user_id: int,
     db: Session = Depends(get_db),
@@ -26,7 +28,12 @@ def create_or_get_conversation(
     ).first()
 
     if existing_conv:
-        return success_response(data={"conversation_id": existing_conv.fld_conversation_id}, message="Conversation retrieved")
+        return {
+            "success": True,
+            "status": 200,
+            "message": "Conversation retrieved",
+            "data": {"conversation_id": existing_conv.fld_conversation_id}
+        }
 
     # 2. If no existing conversation, create a new one
     new_conv = Conversation()
@@ -47,7 +54,12 @@ def create_or_get_conversation(
     ])
     db.commit()
 
-    return success_response(data={"conversation_id": new_conv.fld_conversation_Id}, message="Conversation created")
+    return {
+        "success": True,
+        "status": 200,
+        "message": "Conversation created",
+        "data": {"conversation_id": new_conv.fld_conversation_Id}
+    }
 
 
 """ @router.post("/send-message/{conversation_id}")
@@ -69,7 +81,7 @@ def send_message(
     return {"message": "sent"} """
 
 
-@router.get("/messages/{conversation_id}")
+@router.get("/messages/{conversation_id}", response_model=StandardResponse[MessageList])
 def get_messages(
     conversation_id: int,
     skip: int = 0,
@@ -98,10 +110,15 @@ def get_messages(
         }
         for msg in messages
     ]
-    return success_response(data={"messages": formatted_messages}, message="Messages fetched successfully")
+    return {
+        "success": True,
+        "status": 200,
+        "message": "Messages fetched successfully",
+        "data": {"messages": formatted_messages}
+    }
 
 
-@router.post("/mark-as-read/{conversation_id}")
+@router.post("/mark-as-read/{conversation_id}", response_model=StandardResponse[None])
 def mark_as_read(
     conversation_id: int,
     db: Session = Depends(get_db),
@@ -115,10 +132,14 @@ def mark_as_read(
 
     db.commit()
 
-    return success_response(message="Messages marked as read")
+    return {
+        "success": True,
+        "status": 200,
+        "message": "Messages marked as read"
+    }
 
 
-@router.get("/chats")
+@router.get("/chats", response_model=StandardResponse[ChatList])
 def get_user_chats(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
@@ -184,4 +205,10 @@ def get_user_chats(
             "unread_count": chat[5]
         })
 
-    return success_response(data={"chats": result}, message="User chats fetched successfully")
+    return {
+        "success": True,
+        "status": 200,
+        "message": "User chats fetched successfully",
+        "data": {"chats": result}
+    }
+

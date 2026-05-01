@@ -3,13 +3,13 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.db.models import User
-from app.schemas.user import UserRegister, UserLogin, EmailVerification, ResendOTP
+from app.schemas.user import UserRegister, UserLogin, EmailVerification, ResendOTP, AuthResponseData, UserMeResponse
 from app.schemas.token import Token, RefreshTokenRequest
+from app.schemas.response import StandardResponse
 from app.auth.auth import hash_password, verify_password, create_access_token, create_refresh_token, SECRET_KEY, ALGORITHM
 from app.auth.dependencies import get_current_user
 from app.utils.otp_utils import generate_otp
 from app.services.email_service import send_verification_email
-from app.utils.response_utils import success_response, error_response
 from jose import JWTError, jwt
 from sqlalchemy import or_
 
@@ -17,7 +17,7 @@ from sqlalchemy import or_
 router = APIRouter()
 
 
-@router.post("/register")
+@router.post("/register", response_model=StandardResponse[AuthResponseData])
 def user_register(user: UserRegister, db: Session = Depends(get_db)):
     try:
         existing_user = db.query(User).filter(User.fld_username == user.username).first()
@@ -54,14 +54,19 @@ def user_register(user: UserRegister, db: Session = Depends(get_db)):
             "is_verified": new_user.fld_is_verified
         }
 
-        return success_response(data=data, message="User registered and logged in successfully")
+        return {
+            "success": True,
+            "status": 200,
+            "message": "User registered and logged in successfully",
+            "data": data
+        }
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/login")
+@router.post("/login", response_model=StandardResponse[AuthResponseData])
 def user_login(user: UserLogin, db: Session = Depends(get_db)):
     try:
         db_user = db.query(User).filter(
@@ -89,14 +94,19 @@ def user_login(user: UserLogin, db: Session = Depends(get_db)):
             "user_id": db_user.fld_user_id,
             "is_verified": db_user.fld_is_verified
         }
-        return success_response(data=data, message="Login successful")
+        return {
+            "success": True,
+            "status": 200,
+            "message": "Login successful",
+            "data": data
+        }
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/send-verification")
+@router.post("/send-verification", response_model=StandardResponse[None])
 async def send_verification(
     request: ResendOTP, 
     db: Session = Depends(get_db),
@@ -113,7 +123,11 @@ async def send_verification(
         current_user.fld_is_verified = False
     
     elif current_user.fld_is_verified:
-        return success_response(message="Email is already verified")
+        return {
+            "success": True,
+            "status": 200,
+            "message": "Email is already verified"
+        }
     
     otp = generate_otp()
     current_user.fld_verification_code = otp
@@ -121,17 +135,25 @@ async def send_verification(
     
     await send_verification_email(current_user.fld_email, otp)
     
-    return success_response(message=f"Verification code sent to {current_user.fld_email}")
+    return {
+        "success": True,
+        "status": 200,
+        "message": f"Verification code sent to {current_user.fld_email}"
+    }
 
 
-@router.post("/verify-email")
+@router.post("/verify-email", response_model=StandardResponse[None])
 def verify_email(request: EmailVerification, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.fld_email == request.email).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
     if user.fld_is_verified:
-        return success_response(message="Email is already verified")
+        return {
+            "success": True,
+            "status": 200,
+            "message": "Email is already verified"
+        }
     
     if user.fld_verification_code != request.code:
         raise HTTPException(status_code=400, detail="Invalid verification code")
@@ -140,10 +162,14 @@ def verify_email(request: EmailVerification, db: Session = Depends(get_db)):
     user.fld_verification_code = None  # Clear the code after verification
     db.commit()
     
-    return success_response(message="Email verified successfully")
+    return {
+        "success": True,
+        "status": 200,
+        "message": "Email verified successfully"
+    }
 
 
-@router.post("/refresh", response_model=Token)
+@router.post("/refresh", response_model=StandardResponse[Token])
 def refresh_token(request: RefreshTokenRequest, db: Session = Depends(get_db)):
     try:
         payload = jwt.decode(request.refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -165,7 +191,12 @@ def refresh_token(request: RefreshTokenRequest, db: Session = Depends(get_db)):
             "refresh_token": new_refresh_token,
             "token_type": "bearer"
         }
-        return success_response(data=data, message="Token refreshed successfully")
+        return {
+            "success": True,
+            "status": 200,
+            "message": "Token refreshed successfully",
+            "data": data
+        }
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
     except HTTPException:
@@ -174,7 +205,7 @@ def refresh_token(request: RefreshTokenRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
     
 
-@router.get("/me")
+@router.get("/me", response_model=StandardResponse[UserMeResponse])
 def get_me(current_user: User = Depends(get_current_user)):
     data = {
         "user_id": current_user.fld_user_id,
@@ -182,4 +213,9 @@ def get_me(current_user: User = Depends(get_current_user)):
         "email": current_user.fld_email,
         "is_verified": current_user.fld_is_verified
     }
-    return success_response(data=data, message="User details fetched successfully")
+    return {
+        "success": True,
+        "status": 200,
+        "message": "User details fetched successfully",
+        "data": data
+    }

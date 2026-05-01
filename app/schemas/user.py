@@ -33,3 +33,15 @@ class UserSearchResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class AuthResponseData(BaseModel):
+    access_token: str
+    refresh_token: str
+    user_id: int
+    is_verified: bool
+
+class UserMeResponse(BaseModel):
+    user_id: int
+    username: str
+    email: str
+    is_verified: bool
