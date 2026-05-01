@@ -6,15 +6,22 @@ from sqlalchemy import func, case
 from app.auth.dependencies import get_current_user
 from app.db.database import get_db
 from app.db.models import Conversation, ConversationParticipant, Message, User, MessageDelete
-from app.schemas.response import StandardResponse
+from app.schemas.response import StandardResponse, ErrorResponse
 from app.schemas.conversation import ConversationID, ChatList
 from app.schemas.message import MessageList
 
 
 router = APIRouter()
 
+common_responses = {
+    400: {"model": ErrorResponse},
+    401: {"model": ErrorResponse},
+    404: {"model": ErrorResponse},
+    500: {"model": ErrorResponse},
+}
 
-@router.post("/conversation/{user_id}", response_model=StandardResponse[ConversationID])
+
+@router.post("/conversation/{user_id}", response_model=StandardResponse[ConversationID], responses=common_responses)
 def create_or_get_conversation(
     user_id: int,
     db: Session = Depends(get_db),
@@ -81,7 +88,7 @@ def send_message(
     return {"message": "sent"} """
 
 
-@router.get("/messages/{conversation_id}", response_model=StandardResponse[MessageList])
+@router.get("/messages/{conversation_id}", response_model=StandardResponse[MessageList], responses=common_responses)
 def get_messages(
     conversation_id: int,
     skip: int = 0,
@@ -118,7 +125,7 @@ def get_messages(
     }
 
 
-@router.post("/mark-as-read/{conversation_id}", response_model=StandardResponse[None])
+@router.post("/mark-as-read/{conversation_id}", response_model=StandardResponse[None], responses=common_responses)
 def mark_as_read(
     conversation_id: int,
     db: Session = Depends(get_db),
@@ -139,7 +146,7 @@ def mark_as_read(
     }
 
 
-@router.get("/chats", response_model=StandardResponse[ChatList])
+@router.get("/chats", response_model=StandardResponse[ChatList], responses=common_responses)
 def get_user_chats(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)

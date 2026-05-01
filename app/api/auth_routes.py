@@ -5,7 +5,7 @@ from app.db.database import get_db
 from app.db.models import User
 from app.schemas.user import UserRegister, UserLogin, EmailVerification, ResendOTP, AuthResponseData, UserMeResponse
 from app.schemas.token import Token, RefreshTokenRequest
-from app.schemas.response import StandardResponse
+from app.schemas.response import StandardResponse, ErrorResponse
 from app.auth.auth import hash_password, verify_password, create_access_token, create_refresh_token, SECRET_KEY, ALGORITHM
 from app.auth.dependencies import get_current_user
 from app.utils.otp_utils import generate_otp
@@ -16,8 +16,14 @@ from sqlalchemy import or_
 
 router = APIRouter()
 
+common_responses = {
+    400: {"model": ErrorResponse},
+    401: {"model": ErrorResponse},
+    500: {"model": ErrorResponse},
+}
 
-@router.post("/register", response_model=StandardResponse[AuthResponseData])
+
+@router.post("/register", response_model=StandardResponse[AuthResponseData], responses=common_responses)
 def user_register(user: UserRegister, db: Session = Depends(get_db)):
     try:
         existing_user = db.query(User).filter(User.fld_username == user.username).first()
@@ -66,7 +72,7 @@ def user_register(user: UserRegister, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/login", response_model=StandardResponse[AuthResponseData])
+@router.post("/login", response_model=StandardResponse[AuthResponseData], responses=common_responses)
 def user_login(user: UserLogin, db: Session = Depends(get_db)):
     try:
         db_user = db.query(User).filter(
@@ -106,7 +112,7 @@ def user_login(user: UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/send-verification", response_model=StandardResponse[None])
+@router.post("/send-verification", response_model=StandardResponse[None], responses=common_responses)
 async def send_verification(
     request: ResendOTP, 
     db: Session = Depends(get_db),
@@ -142,7 +148,7 @@ async def send_verification(
     }
 
 
-@router.post("/verify-email", response_model=StandardResponse[None])
+@router.post("/verify-email", response_model=StandardResponse[None], responses=common_responses)
 def verify_email(request: EmailVerification, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.fld_email == request.email).first()
     if not user:
@@ -169,7 +175,7 @@ def verify_email(request: EmailVerification, db: Session = Depends(get_db)):
     }
 
 
-@router.post("/refresh", response_model=StandardResponse[Token])
+@router.post("/refresh", response_model=StandardResponse[Token], responses=common_responses)
 def refresh_token(request: RefreshTokenRequest, db: Session = Depends(get_db)):
     try:
         payload = jwt.decode(request.refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -205,7 +211,7 @@ def refresh_token(request: RefreshTokenRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
     
 
-@router.get("/me", response_model=StandardResponse[UserMeResponse])
+@router.get("/me", response_model=StandardResponse[UserMeResponse], responses=common_responses)
 def get_me(current_user: User = Depends(get_current_user)):
     data = {
         "user_id": current_user.fld_user_id,
