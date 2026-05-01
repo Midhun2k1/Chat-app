@@ -17,6 +17,8 @@ class User(Base):
     fld_hashed_password = Column(String(255), nullable=False)
 
     fld_is_active = Column(Boolean, default=True)
+    fld_is_verified = Column(Boolean, default=False)
+    fld_verification_code = Column(String(10), nullable=True)
 
     fld_created_at = Column(DateTime, default=datetime.utcnow)
     fld_updated_at = Column(DateTime, onupdate=datetime.utcnow)

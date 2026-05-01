@@ -5,7 +5,7 @@ from sqlalchemy import func, case
 
 from app.auth.dependencies import get_current_user
 from app.db.database import get_db
-from app.db.models import Conversation, ConversationParticipant, Message, User
+from app.db.models import Conversation, ConversationParticipant, Message, User, MessageDelete
 
 
 router = APIRouter()
@@ -17,12 +17,17 @@ def create_or_get_conversation(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # 1. Find existing conversation
-    conversations = db.query(ConversationParticipant).filter(
+    # 1. Find existing 1-on-1 conversation between these two users
+    existing_conv = db.query(ConversationParticipant.fld_conversation_id).filter(
         ConversationParticipant.fld_user_id.in_([current_user.fld_user_id, user_id])
-    ).all()
+    ).group_by(ConversationParticipant.fld_conversation_id).having(
+        func.count(ConversationParticipant.fld_user_id) == 2
+    ).first()
 
-    #For now (simple): always create new
+    if existing_conv:
+        return {"conversation_id": existing_conv.fld_conversation_id}
+
+    # 2. If no existing conversation, create a new one
     new_conv = Conversation()
     db.add(new_conv)
     db.commit()
@@ -44,7 +49,7 @@ def create_or_get_conversation(
     return {"conversation_id": new_conv.fld_conversation_Id}
 
 
-@router.post("/send-message/{conversation_id}")
+""" @router.post("/send-message/{conversation_id}")
 def send_message(
     conversation_id: int,
     message: str,
@@ -60,23 +65,31 @@ def send_message(
     db.add(new_msg)
     db.commit()
 
-    return {"message": "sent"}
+    return {"message": "sent"} """
 
 
 @router.get("/messages/{conversation_id}")
 def get_messages(
     conversation_id: int,
+    skip: int = 0,
+    limit: int = 50,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    # Subquery for messages deleted for the current user
+    deleted_ids = db.query(MessageDelete.message_id).filter(
+        MessageDelete.user_id == current_user.fld_user_id
+    ).subquery()
+
     messages = db.query(Message).filter(
-        Message.fld_conversation_id == conversation_id
-    ).order_by(Message.fld_created_at.asc()).all()
+        Message.fld_conversation_id == conversation_id,
+        ~Message.fld_message_id.in_(deleted_ids)
+    ).order_by(Message.fld_created_at.desc()).offset(skip).limit(limit).all()
 
     return messages
 
 
-@router.post("/messages/read/{conversation_id}")
+@router.post("/mark-as-read/{conversation_id}")
 def mark_as_read(
     conversation_id: int,
     db: Session = Depends(get_db),

@@ -5,7 +5,7 @@ from app.db.models import Message, ConversationParticipant, MessageDelete
 
 
 
-# SEND MESSAGE
+# TO SEND MESSAGE
 async def handle_send_message(user_id: int, payload: dict, db: Session):
     try:
         conversation_id = payload.get("chatId")
@@ -15,7 +15,6 @@ async def handle_send_message(user_id: int, payload: dict, db: Session):
         if not conversation_id or not text:
             return
 
-        # Save message in DB
         new_message = Message(
             fld_conversation_id=conversation_id,
             fld_sender_id=user_id,
@@ -30,17 +29,6 @@ async def handle_send_message(user_id: int, payload: dict, db: Session):
         db.refresh(new_message)
 
         server_timestamp = int(datetime.utcnow().timestamp())
-
-        # ACK to sender (important for optimistic UI)
-        """ sender_ws = manager.active_connections.get(user_id)
-        if sender_ws:
-            await sender_ws.send_json({
-                "type": "ACK_SEND_MSG",
-                "payload": {
-                    "id": client_msg_id,
-                    "serverTimestamp": server_timestamp
-                }
-            }) """
         
         sender_sockets = manager.active_connections.get(user_id, [])
         for ws in sender_sockets:
@@ -57,10 +45,8 @@ async def handle_send_message(user_id: int, payload: dict, db: Session):
             ConversationParticipant.fld_conversation_id == conversation_id
         ).all()
 
-        # Broadcast message
         for p in participants:
-            # Skip sending the message back to the sender since they already got the ACK
-            if p.fld_user_id == user_id:
+            if p.fld_user_id == user_id: # Skip sending the message back to the sender since they already got the ACK
                 continue
 
             target_sockets = manager.active_connections.get(p.fld_user_id, [])
@@ -91,18 +77,6 @@ async def handle_typing(user_id: int, payload: dict):
 
         if chat_id is None:
             return
-
-        # broadcast to others
-        """ for uid, ws in manager.active_connections.items():
-            if uid != user_id:
-                await ws.send_json({
-                    "type": "TYPING",
-                    "payload": {
-                        "chatId": str(chat_id),
-                        "userId": str(user_id),
-                        "isTyping": is_typing
-                    }
-                }) """
         
         for uid, sockets in manager.active_connections.items():
             if uid != user_id:
@@ -120,9 +94,8 @@ async def handle_typing(user_id: int, payload: dict):
         print("TYPING ERROR:", e)
 
 
-# =========================================================
+
 # MESSAGE STATUS (DELIVERED / READ)
-# =========================================================
 async def handle_message_status(user_id: int, payload: dict, db: Session):
     try:
         message_id = payload.get("messageId")
@@ -131,24 +104,19 @@ async def handle_message_status(user_id: int, payload: dict, db: Session):
         if not message_id or not status:
             return
 
-        # Update DB for read
         if status == "read":
-            db.query(Message).filter(
-                Message.client_msg_id == message_id
-            ).update({
-                "fld_is_read": True
-            })
-            db.commit()
+            target_message = db.query(Message).filter(Message.client_message_id == message_id).first()
+            
+            if target_message:
+                db.query(Message).filter(
+                    Message.fld_conversation_id == target_message.fld_conversation_id,
+                    Message.fld_sender_id != user_id,
+                    Message.fld_is_read == False,
+                    Message.fld_created_at <= target_message.fld_created_at
+                ).update({"fld_is_read": True})
+                
+                db.commit()
 
-        # Broadcast status to all connected users
-        """ for ws in manager.active_connections.values():
-            await ws.send_json({
-                "type": "MSG_STATUS",
-                "payload": {
-                    "messageId": str(message_id),
-                    "status": status
-                }
-            }) """
         for sockets in manager.active_connections.values():
             for ws in sockets:
                 await ws.send_json({
@@ -188,26 +156,35 @@ async def handle_presence(user_id: int, payload: dict):
 
 
 
-# EDIT MESSAGE
+# TO EDIT MESSAGE
 async def handle_edit_message(user_id: int, payload: dict, db: Session):
     try:
         message_id = payload.get("id")
         new_text = payload.get("text")
         edited_at = payload.get("editedAt")
-
+        print("EDIT MESSAGE:", message_id, new_text, edited_at)
         if not message_id or not new_text:
             return
 
         message = db.query(Message).filter(
-            Message.client_msg_id == message_id,
+            Message.client_message_id == message_id,
             Message.fld_sender_id == user_id
         ).first()
+        print(message, "msg")
 
         if not message:
             return
 
         # Only sender can edit
         if message.fld_sender_id != user_id:
+            sender_sockets = manager.active_connections.get(user_id, [])
+            for ws in sender_sockets:
+                await ws.send_json({
+                    "type": "ERROR",
+                    "payload": {
+                        "message": "You can only edit your own messages."
+                    }
+                })
             return
 
         message.fld_message = new_text
@@ -224,8 +201,9 @@ async def handle_edit_message(user_id: int, payload: dict, db: Session):
                 }
             })
 
-        # Broadcast edit
-        for sockets in manager.active_connections.values():
+        for uid, sockets in manager.active_connections.items():
+            if uid == user_id:
+                continue  # Skip the sender
             for ws in sockets:
                 await ws.send_json({
                     "type": "RECEIVE_EDIT_MSG",
@@ -252,7 +230,7 @@ async def handle_delete_message(user_id: int, payload: dict, db: Session):
             return
 
         message = db.query(Message).filter(
-            Message.client_msg_id == message_id
+            Message.client_message_id == message_id
         ).first()
 
         if not message:
@@ -260,18 +238,26 @@ async def handle_delete_message(user_id: int, payload: dict, db: Session):
 
         if delete_type == "deleteForEveryone":
             if message.fld_sender_id != user_id:
+                sender_sockets = manager.active_connections.get(user_id, [])
+                for ws in sender_sockets:
+                    await ws.send_json({
+                        "type": "ERROR",
+                        "payload": {
+                            "message": "You can only delete your own messages for everyone."
+                        }
+                    })
                 return
-            
+
             message.fld_is_deleted_for_everyone = True
-            #message.fld_message = "This message was deleted"
             db.commit()
 
         elif delete_type == "deleteForMe":
             new_delete = MessageDelete(
-                message_id=message_id,
+                message_id=message.fld_message_id,
                 user_id=user_id
             )
             db.add(new_delete)
+            db.commit()
 
         # ACK sender
         sender_sockets = manager.active_connections.get(user_id, [])
@@ -284,17 +270,18 @@ async def handle_delete_message(user_id: int, payload: dict, db: Session):
                 }
             })
 
-        # Broadcast delete
-        for sockets in manager.active_connections.values():
-            for ws in sockets:
-                await ws.send_json({
-                    "type": "RECEIVE_DELETE_MSG",
-                    "payload": {
-                        "id": str(message_id),
-                        "deleteType": delete_type,
-                        "deletedAt": deleted_at
-                    }
-                })
+        # Broadcast delete ONLY for 'deleteForEveryone'
+        if delete_type == "deleteForEveryone":
+            for sockets in manager.active_connections.values():
+                for ws in sockets:
+                    await ws.send_json({
+                        "type": "RECEIVE_DELETE_MSG",
+                        "payload": {
+                            "id": str(message_id),
+                            "deleteType": delete_type,
+                            "deletedAt": deleted_at
+                        }
+                    })
 
     except Exception as e:
         print("DELETE_MSG ERROR:", e)

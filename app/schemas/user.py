@@ -16,3 +16,21 @@ class UserRegister(BaseModel):
 class UserLogin(BaseModel):
     username: str
     password: str
+
+class EmailVerification(BaseModel):
+    email: EmailStr
+    code: str
+
+class ResendOTP(BaseModel):
+    email: EmailStr
+
+class UserSearchResponse(BaseModel):
+    user_id: int
+    username: str
+    firstname: str
+    lastname: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+
+    class Config:
+        from_attributes = True
