@@ -7,6 +7,7 @@ from app.db.database import get_db
 from app.db.models import User
 from app.auth.dependencies import get_current_user
 from app.schemas.user import UserSearchResponse
+from app.utils.response_utils import success_response
 
 router = APIRouter()
 
@@ -20,7 +21,7 @@ def get_all_users(
         User.fld_user_id != current_user.fld_user_id
     ).all()
 
-    return [
+    users_list = [
         {
             "user_id": user.fld_user_id,
             "username": user.fld_username,
@@ -29,9 +30,10 @@ def get_all_users(
         }
         for user in users
     ]
+    return success_response(data={"users": users_list}, message="Users fetched successfully")
 
 
-@router.get("/users/search", response_model=List[UserSearchResponse])
+@router.get("/users/search")
 def search_users(
     query: str = Query(..., min_length=1),
     current_user: User = Depends(get_current_user),
@@ -48,7 +50,7 @@ def search_users(
         )
     ).limit(50).all()
 
-    return [
+    users_list = [
         {
             "user_id": user.fld_user_id,
             "username": user.fld_username,
@@ -59,3 +61,4 @@ def search_users(
         }
         for user in users
     ]
+    return success_response(data={"users": users_list}, message="Users fetched successfully")

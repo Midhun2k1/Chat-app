@@ -6,6 +6,7 @@ from sqlalchemy import func, case
 from app.auth.dependencies import get_current_user
 from app.db.database import get_db
 from app.db.models import Conversation, ConversationParticipant, Message, User, MessageDelete
+from app.utils.response_utils import success_response
 
 
 router = APIRouter()
@@ -25,7 +26,7 @@ def create_or_get_conversation(
     ).first()
 
     if existing_conv:
-        return {"conversation_id": existing_conv.fld_conversation_id}
+        return success_response(data={"conversation_id": existing_conv.fld_conversation_id}, message="Conversation retrieved")
 
     # 2. If no existing conversation, create a new one
     new_conv = Conversation()
@@ -46,7 +47,7 @@ def create_or_get_conversation(
     ])
     db.commit()
 
-    return {"conversation_id": new_conv.fld_conversation_Id}
+    return success_response(data={"conversation_id": new_conv.fld_conversation_Id}, message="Conversation created")
 
 
 """ @router.post("/send-message/{conversation_id}")
@@ -86,7 +87,18 @@ def get_messages(
         ~Message.fld_message_id.in_(deleted_ids)
     ).order_by(Message.fld_created_at.desc()).offset(skip).limit(limit).all()
 
-    return messages
+    # Format messages for the response
+    formatted_messages = [
+        {
+            "message_id": msg.fld_message_id,
+            "sender_id": msg.fld_sender_id,
+            "message": msg.fld_message,
+            "created_at": str(msg.fld_created_at),
+            "is_read": msg.fld_is_read
+        }
+        for msg in messages
+    ]
+    return success_response(data={"messages": formatted_messages}, message="Messages fetched successfully")
 
 
 @router.post("/mark-as-read/{conversation_id}")
@@ -103,7 +115,7 @@ def mark_as_read(
 
     db.commit()
 
-    return {"message": "Messages marked as read"}
+    return success_response(message="Messages marked as read")
 
 
 @router.get("/chats")
@@ -172,4 +184,4 @@ def get_user_chats(
             "unread_count": chat[5]
         })
 
-    return result
+    return success_response(data={"chats": result}, message="User chats fetched successfully")

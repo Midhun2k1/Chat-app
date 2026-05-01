@@ -7,14 +7,13 @@ class UserRegister(BaseModel):
     lastname: str
     username: str
     #Contact Info
-    email: Optional[EmailStr] = None
-    phone: Optional[str] = None
+    email: EmailStr
     #Security Info
     password: str
 
 
 class UserLogin(BaseModel):
-    username: str
+    identifier: str
     password: str
 
 class EmailVerification(BaseModel):

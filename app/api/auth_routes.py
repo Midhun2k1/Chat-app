@@ -9,6 +9,7 @@ from app.auth.auth import hash_password, verify_password, create_access_token, c
 from app.auth.dependencies import get_current_user
 from app.utils.otp_utils import generate_otp
 from app.services.email_service import send_verification_email
+from app.utils.response_utils import success_response, error_response
 from jose import JWTError, jwt
 from sqlalchemy import or_
 
@@ -19,20 +20,12 @@ router = APIRouter()
 @router.post("/register")
 def user_register(user: UserRegister, db: Session = Depends(get_db)):
     try:
-        if not user.email and not user.phone:
-            raise HTTPException(status_code=400, detail="UserRegister")
-        
         existing_user = db.query(User).filter(User.fld_username == user.username).first()
         if existing_user:
             raise HTTPException(status_code=400, detail="Username already exist")
-        
-        if user.email:
-            if db.query(User).filter(User.fld_email == user.email).first():
-                raise HTTPException(status_code=400, detail="Email is already registered")
-            
-        if user.phone:
-            if db.query(User).filter(User.fld_phone == user.phone).first():
-                raise HTTPException(status_code=400, detail="Phone number is already registered")
+
+        if db.query(User).filter(User.fld_email == user.email).first():
+            raise HTTPException(status_code=400, detail="Email is already registered")
             
         hashed_password = hash_password(user.password)
         new_user = User(
@@ -40,7 +33,6 @@ def user_register(user: UserRegister, db: Session = Depends(get_db)):
             fld_lastname = user.lastname,
             fld_username = user.username,
             fld_email = user.email,
-            fld_phone = user.phone or None,
             fld_hashed_password = hashed_password
         )
 
@@ -48,15 +40,36 @@ def user_register(user: UserRegister, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(new_user)
 
-        return {"message": "user registered successfully"}
+        access_token = create_access_token(
+            data={"user_id": new_user.fld_user_id}
+        )
+        refresh_token = create_refresh_token(
+            data={"user_id": new_user.fld_user_id}
+        )
+
+        data = {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "user_id": new_user.fld_user_id,
+            "is_verified": new_user.fld_is_verified
+        }
+
+        return success_response(data=data, message="User registered and logged in successfully")
+    except HTTPException:
+        raise
     except Exception as e:
-        return str(e)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/login")
 def user_login(user: UserLogin, db: Session = Depends(get_db)):
     try:
-        db_user = db.query(User).filter(User.fld_username == user.username).first()
+        db_user = db.query(User).filter(
+            or_(
+                User.fld_username == user.identifier,
+                User.fld_email == user.identifier
+            )
+        ).first()
         if not db_user:
             raise HTTPException(status_code=400, detail="User not found!")
         
@@ -70,12 +83,15 @@ def user_login(user: UserLogin, db: Session = Depends(get_db)):
             data={"user_id": db_user.fld_user_id}
         )
 
-        return {
+        data = {
             "access_token": access_token,
             "refresh_token": refresh_token,
-            "token_type": "bearer",
+            "user_id": db_user.fld_user_id,
             "is_verified": db_user.fld_is_verified
         }
+        return success_response(data=data, message="Login successful")
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -97,7 +113,7 @@ async def send_verification(
         current_user.fld_is_verified = False
     
     elif current_user.fld_is_verified:
-        return {"message": "Email is already verified"}
+        return success_response(message="Email is already verified")
     
     otp = generate_otp()
     current_user.fld_verification_code = otp
@@ -105,7 +121,7 @@ async def send_verification(
     
     await send_verification_email(current_user.fld_email, otp)
     
-    return {"message": f"Verification code sent to {current_user.fld_email}"}
+    return success_response(message=f"Verification code sent to {current_user.fld_email}")
 
 
 @router.post("/verify-email")
@@ -115,7 +131,7 @@ def verify_email(request: EmailVerification, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     
     if user.fld_is_verified:
-        return {"message": "Email is already verified"}
+        return success_response(message="Email is already verified")
     
     if user.fld_verification_code != request.code:
         raise HTTPException(status_code=400, detail="Invalid verification code")
@@ -124,7 +140,7 @@ def verify_email(request: EmailVerification, db: Session = Depends(get_db)):
     user.fld_verification_code = None  # Clear the code after verification
     db.commit()
     
-    return {"message": "Email verified successfully"}
+    return success_response(message="Email verified successfully")
 
 
 @router.post("/refresh", response_model=Token)
@@ -144,22 +160,26 @@ def refresh_token(request: RefreshTokenRequest, db: Session = Depends(get_db)):
         new_access_token = create_access_token(data={"user_id": db_user.fld_user_id})
         new_refresh_token = create_refresh_token(data={"user_id": db_user.fld_user_id})
 
-        return {
+        data = {
             "access_token": new_access_token,
             "refresh_token": new_refresh_token,
             "token_type": "bearer"
         }
+        return success_response(data=data, message="Token refreshed successfully")
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
 
 @router.get("/me")
 def get_me(current_user: User = Depends(get_current_user)):
-    return {
+    data = {
         "user_id": current_user.fld_user_id,
         "username": current_user.fld_username,
         "email": current_user.fld_email,
         "is_verified": current_user.fld_is_verified
     }
+    return success_response(data=data, message="User details fetched successfully")
