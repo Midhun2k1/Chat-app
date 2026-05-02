@@ -14,3 +14,6 @@ class ChatItem(BaseModel):
 
 class ChatList(BaseModel):
     chats: List[ChatItem]
+
+class ConversationCreateRequest(BaseModel):
+    user_id: int

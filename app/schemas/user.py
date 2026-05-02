@@ -37,6 +37,9 @@ class UserSearchResponse(BaseModel):
 class UserList(BaseModel):
     users: List[UserSearchResponse]
 
+class UserSearchRequest(BaseModel):
+    query: str
+
 class AuthResponseData(BaseModel):
     access_token: str
     refresh_token: str

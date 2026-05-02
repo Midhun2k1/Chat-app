@@ -7,8 +7,8 @@ from app.auth.dependencies import get_current_user
 from app.db.database import get_db
 from app.db.models import Conversation, ConversationParticipant, Message, User, MessageDelete
 from app.schemas.response import StandardResponse, ErrorResponse
-from app.schemas.conversation import ConversationID, ChatList
-from app.schemas.message import MessageList
+from app.schemas.conversation import ConversationID, ChatList, ConversationCreateRequest
+from app.schemas.message import MessageList, MessageFetchRequest, MarkAsReadRequest
 
 
 router = APIRouter()
@@ -21,12 +21,13 @@ common_responses = {
 }
 
 
-@router.post("/conversation/{user_id}", response_model=StandardResponse[ConversationID], responses=common_responses)
+@router.post("/conversation", response_model=StandardResponse[ConversationID], responses=common_responses)
 def create_or_get_conversation(
-    user_id: int,
+    request: ConversationCreateRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    user_id = request.user_id
     # 1. Find existing 1-on-1 conversation between these two users
     existing_conv = db.query(ConversationParticipant.fld_conversation_id).filter(
         ConversationParticipant.fld_user_id.in_([current_user.fld_user_id, user_id])
@@ -88,14 +89,16 @@ def send_message(
     return {"message": "sent"} """
 
 
-@router.get("/messages/{conversation_id}", response_model=StandardResponse[MessageList], responses=common_responses)
+@router.post("/messages", response_model=StandardResponse[MessageList], responses=common_responses)
 def get_messages(
-    conversation_id: int,
-    skip: int = 0,
-    limit: int = 50,
+    request: MessageFetchRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    conversation_id = request.conversation_id
+    skip = request.skip
+    limit = request.limit
+
     # Subquery for messages deleted for the current user
     deleted_ids = db.query(MessageDelete.message_id).filter(
         MessageDelete.user_id == current_user.fld_user_id
@@ -125,12 +128,13 @@ def get_messages(
     }
 
 
-@router.post("/mark-as-read/{conversation_id}", response_model=StandardResponse[None], responses=common_responses)
+@router.post("/mark-as-read", response_model=StandardResponse[None], responses=common_responses)
 def mark_as_read(
-    conversation_id: int,
+    request: MarkAsReadRequest,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
+    conversation_id = request.conversation_id
     db.query(Message).filter(
         Message.fld_conversation_id == conversation_id,
         Message.fld_sender_id != current_user.fld_user_id,

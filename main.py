@@ -24,10 +24,20 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = exc.errors()
+    error_msgs = []
+    for err in errors:
+        # Create a readable location string (e.g., "username" instead of ("body", "username"))
+        loc = ".".join(str(l) for l in err["loc"] if l != "body")
+        msg = err["msg"]
+        error_msgs.append(f"{loc}: {msg}" if loc else msg)
+
+    error_message = "; ".join(error_msgs) if error_msgs else "Validation error"
+
     return error_response(
-        message="Validation error",
+        message=error_message,
         code="VALIDATION_ERROR",
-        details=exc.errors(),
+        details=errors,
         status_code=422
     )
 
@@ -49,3 +59,4 @@ app.include_router(chat_ws.router)
 def root():
     return success_response(message="Chat app is running 🚀")
 
+ 
