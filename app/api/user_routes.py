@@ -34,7 +34,7 @@ def get_all_users(
     return success_response(data={"users": users_list}, message="Users fetched successfully")
 
 
-@router.post("/users/search", response_model=StandardResponse[UserList])
+@router.post("/user-search", response_model=StandardResponse[UserList])
 def search_users(
     request: UserSearchRequest,
     current_user: User = Depends(get_current_user),

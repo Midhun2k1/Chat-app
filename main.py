@@ -27,10 +27,9 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     errors = exc.errors()
     error_msgs = []
     for err in errors:
-        # Create a readable location string (e.g., "username" instead of ("body", "username"))
-        loc = ".".join(str(l) for l in err["loc"] if l != "body")
-        msg = err["msg"]
-        error_msgs.append(f"{loc}: {msg}" if loc else msg)
+        reason = err.get("ctx", {}).get("reason")
+        msg = reason if reason else err["msg"]
+        error_msgs.append(msg)
 
     error_message = "; ".join(error_msgs) if error_msgs else "Validation error"
 
@@ -58,5 +57,3 @@ app.include_router(chat_ws.router)
 @app.get("/", response_model=StandardResponse[None])
 def root():
     return success_response(message="Chat app is running 🚀")
-
- 
