@@ -5,7 +5,7 @@ from jose import jwt
 
 SECRET_KEY = "Some_key_which_i_dont_know"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTE = 120
+ACCESS_TOKEN_EXPIRE_MINUTE = 5 #120
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
