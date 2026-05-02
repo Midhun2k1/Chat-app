@@ -47,6 +47,7 @@ def search_users(
             User.fld_username.ilike(search_query),
             User.fld_firstname.ilike(search_query),
             User.fld_lastname.ilike(search_query),
+            (User.fld_firstname + " " + User.fld_lastname).ilike(search_query),
             User.fld_email.ilike(search_query)
         )
     ).limit(50).all()
