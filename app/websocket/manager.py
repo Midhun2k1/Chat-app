@@ -1,5 +1,6 @@
 from fastapi import WebSocket
 from typing import Dict, List
+from datetime import datetime
 
 
 class ConnectionManager:
@@ -35,8 +36,9 @@ class ConnectionManager:
         online_users = list(self.active_connections.keys())
 
         message = {
-            "type": "ONLINE_USERS",
-            "payload": online_users
+            "event": "ONLINE_USERS",
+            "payload": online_users,
+            "timestamp": int(datetime.utcnow().timestamp())
         }
 
         # send to all users

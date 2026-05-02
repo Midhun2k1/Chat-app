@@ -2,16 +2,17 @@ import json
 import subprocess
 import os
 from main import app
+from export_ws_schema import export_ws_schema
 
 def export_openapi():
     # Set server URL for production if needed, or leave default
     openapi_schema = app.openapi()
-    
+
     # Save JSON
     with open("openapi.json", "w") as f:
         json.dump(openapi_schema, f, indent=2)
     print("OpenAPI schema exported to openapi.json")
-    
+
     # Generate TypeScript types using openapi-typescript
     # We use npx to ensure the tool is available without global install
     print("Generating TypeScript types...")
@@ -31,5 +32,12 @@ def export_openapi():
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
+    # Generate WebSocket types
+    try:
+        export_ws_schema()
+    except Exception as e:
+        print(f"Error generating WebSocket types: {e}")
+
 if __name__ == "__main__":
     export_openapi()
+ 

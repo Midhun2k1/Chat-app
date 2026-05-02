@@ -9,6 +9,8 @@ from app.db.models import Conversation, ConversationParticipant, Message, User, 
 from app.schemas.response import StandardResponse, ErrorResponse
 from app.schemas.conversation import ConversationID, ChatList, ConversationCreateRequest
 from app.schemas.message import MessageList, MessageFetchRequest, MarkAsReadRequest
+from app.utils.response_utils import error_response
+
 
 
 router = APIRouter()
@@ -28,11 +30,19 @@ def create_or_get_conversation(
     current_user: User = Depends(get_current_user)
 ):
     user_id = request.user_id
+
+    if user_id == current_user.fld_user_id:
+        return error_response(message="You cannot start a conversation with yourself", code="INVALID_REQUEST", status_code=400)
+
     # 1. Find existing 1-on-1 conversation between these two users
-    existing_conv = db.query(ConversationParticipant.fld_conversation_id).filter(
-        ConversationParticipant.fld_user_id.in_([current_user.fld_user_id, user_id])
-    ).group_by(ConversationParticipant.fld_conversation_id).having(
-        func.count(ConversationParticipant.fld_user_id) == 2
+    cp1 = aliased(ConversationParticipant)
+    cp2 = aliased(ConversationParticipant)
+
+    existing_conv = db.query(cp1.fld_conversation_id).join(
+        cp2, cp1.fld_conversation_id == cp2.fld_conversation_id
+    ).filter(
+        cp1.fld_user_id == current_user.fld_user_id,
+        cp2.fld_user_id == user_id
     ).first()
 
     if existing_conv:
@@ -116,7 +126,8 @@ def get_messages(
             "sender_id": msg.fld_sender_id,
             "message": msg.fld_message,
             "created_at": str(msg.fld_created_at),
-            "is_read": msg.fld_is_read
+            "is_read": msg.fld_is_read,
+            "is_deleted_for_everyone": msg.fld_is_deleted_for_everyone
         }
         for msg in messages
     ]
@@ -223,3 +234,4 @@ def get_user_chats(
         "data": {"chats": result}
     }
 
+ 

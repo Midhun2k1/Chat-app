@@ -7,6 +7,7 @@ class MessageItem(BaseModel):
     message: str
     created_at: str
     is_read: bool
+    is_deleted_for_everyone: bool
 
 class MessageList(BaseModel):
     messages: List[MessageItem]
