@@ -5,6 +5,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.api import auth_routes, user_routes, chat_routes, chat_ws
 from app.db.database import engine
 from app.db import models
+from app.schemas.response import StandardResponse
 from app.utils.response_utils import error_response, success_response
 
 
@@ -44,7 +45,7 @@ app.include_router(user_routes.router)
 app.include_router(chat_routes.router)
 app.include_router(chat_ws.router)
 
-@app.get("/")
+@app.get("/", response_model=StandardResponse[None])
 def root():
     return success_response(message="Chat app is running 🚀")
-
+

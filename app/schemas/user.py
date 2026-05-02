@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, List
 
 class UserRegister(BaseModel):
     #Basic Info
@@ -33,6 +33,9 @@ class UserSearchResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class UserList(BaseModel):
+    users: List[UserSearchResponse]
 
 class AuthResponseData(BaseModel):
     access_token: str

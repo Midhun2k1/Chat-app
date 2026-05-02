@@ -6,13 +6,14 @@ from typing import List
 from app.db.database import get_db
 from app.db.models import User
 from app.auth.dependencies import get_current_user
-from app.schemas.user import UserSearchResponse
+from app.schemas.user import UserSearchResponse, UserList
+from app.schemas.response import StandardResponse
 from app.utils.response_utils import success_response
 
 router = APIRouter()
 
 
-@router.post("/users")
+@router.post("/users", response_model=StandardResponse[UserList])
 def get_all_users(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -33,7 +34,7 @@ def get_all_users(
     return success_response(data={"users": users_list}, message="Users fetched successfully")
 
 
-@router.get("/users/search")
+@router.get("/users/search", response_model=StandardResponse[UserList])
 def search_users(
     query: str = Query(..., min_length=1),
     current_user: User = Depends(get_current_user),

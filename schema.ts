@@ -392,6 +392,16 @@ export interface components {
             message: string;
             data?: components["schemas"]["Token"] | null;
         };
+        /** StandardResponse[UserList] */
+        StandardResponse_UserList_: {
+            /** Success */
+            success: boolean;
+            /** Status */
+            status: number;
+            /** Message */
+            message: string;
+            data?: components["schemas"]["UserList"] | null;
+        };
         /** StandardResponse[UserMeResponse] */
         StandardResponse_UserMeResponse_: {
             /** Success */
@@ -410,6 +420,11 @@ export interface components {
             refresh_token: string;
             /** Token Type */
             token_type: string;
+        };
+        /** UserList */
+        UserList: {
+            /** Users */
+            users: components["schemas"]["UserSearchResponse"][];
         };
         /** UserLogin */
         UserLogin: {
@@ -444,6 +459,21 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+        };
+        /** UserSearchResponse */
+        UserSearchResponse: {
+            /** User Id */
+            user_id: number;
+            /** Username */
+            username: string;
+            /** Firstname */
+            firstname: string;
+            /** Lastname */
+            lastname: string;
+            /** Email */
+            email?: string | null;
+            /** Phone */
+            phone?: string | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -829,7 +859,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["StandardResponse_UserList_"];
                 };
             };
         };
@@ -851,7 +881,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["StandardResponse_UserList_"];
                 };
             };
             /** @description Validation Error */
@@ -1140,7 +1170,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["StandardResponse_NoneType_"];
                 };
             };
         };
