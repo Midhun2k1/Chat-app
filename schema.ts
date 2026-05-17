@@ -280,8 +280,7 @@ export interface components {
             id: string;
             /** Name */
             name: string;
-            /** Type */
-            type: string;
+            type: components["schemas"]["ChatType"];
             /** Unread Count */
             unread_count: number;
             /** Last Message Text */
@@ -304,6 +303,11 @@ export interface components {
             /** Userids */
             userIDs: string[];
         };
+        /**
+         * ChatType
+         * @enum {string}
+         */
+        ChatType: "individual" | "group";
         /** ChatUserDetailsRequest */
         ChatUserDetailsRequest: {
             /** Chatid */

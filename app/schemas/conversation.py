@@ -1,5 +1,10 @@
+from enum import Enum
 from pydantic import BaseModel
 from typing import List, Optional
+
+class ChatType(str, Enum):
+    INDIVIDUAL = "individual"
+    GROUP = "group"
 
 class ConversationID(BaseModel):
     conversation_id: int
@@ -10,7 +15,7 @@ class ChatParticipants(BaseModel):
 class ChatItem(BaseModel):
     id: str
     name: str
-    type: str  # 'individual' or 'group'
+    type: ChatType
     unread_count: int
     last_message_text: Optional[str] = None
     updated_at: str  # ISO Zulu time string

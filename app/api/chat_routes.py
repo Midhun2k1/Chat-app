@@ -9,7 +9,7 @@ from app.db.database import get_db
 from app.db.models import Conversation, ConversationParticipant, Message, User, MessageDelete
 from app.schemas.response import StandardResponse, ErrorResponse
 from typing import List
-from app.schemas.conversation import ConversationID, ChatList, ConversationCreateRequest, ChatUserDetailsRequest, UserDetail
+from app.schemas.conversation import ConversationID, ChatList, ConversationCreateRequest, ChatUserDetailsRequest, UserDetail, ChatType
 from app.schemas.message import MessageList, MessageFetchRequest, MarkAsReadRequest
 from app.utils.response_utils import success_response, error_response
 from app.utils.time_utils import format_datetime_to_zulu
@@ -254,10 +254,10 @@ def get_user_chats(
         parts = participants_by_conv[cid]
 
         user_ids_str = [str(p["user_id"]) for p in parts]
-        chat_type = "individual" if len(parts) == 2 else "group"
+        chat_type = ChatType.INDIVIDUAL if len(parts) == 2 else ChatType.GROUP
 
         # Determine chat display name
-        if chat_type == "individual":
+        if chat_type == ChatType.INDIVIDUAL:
             other_part = next((p for p in parts if p["user_id"] != user_id), None)
             if other_part:
                 chat_name = f"{other_part['firstname']} {other_part['lastname']}".strip()

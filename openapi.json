@@ -942,8 +942,7 @@
             "title": "Name"
           },
           "type": {
-            "type": "string",
-            "title": "Type"
+            "$ref": "#/components/schemas/ChatType"
           },
           "unread_count": {
             "type": "integer",
@@ -1026,6 +1025,14 @@
           "userIDs"
         ],
         "title": "ChatParticipants"
+      },
+      "ChatType": {
+        "type": "string",
+        "enum": [
+          "individual",
+          "group"
+        ],
+        "title": "ChatType"
       },
       "ChatUserDetailsRequest": {
         "properties": {
