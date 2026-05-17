@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy import func, case
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 from app.auth.dependencies import get_current_user
@@ -267,8 +267,7 @@ def get_user_chats(
             other_names = [p["firstname"] for p in parts if p["user_id"] != user_id]
             chat_name = ", ".join(other_names) if other_names else "Group Chat"
 
-        # Calculate updated_at formatted Zulu time string
-        updated_at_str = format_datetime_to_zulu(chat.last_message_time) if chat.last_message_time else format_datetime_to_zulu(datetime.utcnow())
+        updated_at_str = format_datetime_to_zulu(chat.last_message_time) if chat.last_message_time else format_datetime_to_zulu(datetime.now(timezone.utc))
 
         result.append({
             "id": str(cid),

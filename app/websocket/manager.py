@@ -1,6 +1,6 @@
 from fastapi import WebSocket
 from typing import Dict, List
-from datetime import datetime
+from datetime import datetime, timezone
 from app.utils.time_utils import format_datetime_to_zulu
 
 
@@ -39,7 +39,7 @@ class ConnectionManager:
         message = {
             "event": "ONLINE_USERS",
             "payload": online_users,
-            "timestamp": format_datetime_to_zulu(datetime.utcnow())
+            "timestamp": format_datetime_to_zulu(datetime.now(timezone.utc))
         }
 
         # send to all users

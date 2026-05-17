@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 def format_datetime_to_zulu(val) -> str:
     """
@@ -8,6 +8,9 @@ def format_datetime_to_zulu(val) -> str:
     if val is None:
         return ""
     if isinstance(val, datetime):
+        # Convert to UTC if timezone-aware
+        if val.tzinfo is not None:
+            val = val.astimezone(timezone.utc)
         return val.strftime('%Y-%m-%dT%H:%M:%S.%f') + 'z'
     if isinstance(val, (int, float)):
         # Convert epoch to datetime

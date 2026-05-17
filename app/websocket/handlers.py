@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from app.websocket.manager import manager
 from app.db.models import Message, ConversationParticipant, MessageDelete
@@ -25,7 +25,7 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
             fld_conversation_id=conversation_id,
             fld_sender_id=user_id,
             fld_message=text,
-            fld_created_at=datetime.utcnow(),
+            fld_created_at=datetime.now(timezone.utc),
             fld_is_read=False,
             client_message_id=client_msg_id
         )
@@ -34,7 +34,7 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
         db.commit()
         db.refresh(new_message)
 
-        server_timestamp = format_datetime_to_zulu(datetime.utcnow())
+        server_timestamp = format_datetime_to_zulu(datetime.now(timezone.utc))
 
         # Construct ACK message
         ack_msg = WsServerMessage(
@@ -89,7 +89,7 @@ async def handle_typing(user_id: int, payload: TypingPayload):
         chat_id = payload.chatId
         is_typing = payload.isTyping
 
-        server_timestamp = format_datetime_to_zulu(datetime.utcnow())
+        server_timestamp = format_datetime_to_zulu(datetime.now(timezone.utc))
         typing_msg = WsServerMessage(
             event="TYPING",
             payload=TypingBroadcastPayload(
@@ -129,7 +129,7 @@ async def handle_message_status(user_id: int, payload: MessageStatusPayload, db:
 
                 db.commit()
 
-        server_timestamp = format_datetime_to_zulu(datetime.utcnow())
+        server_timestamp = format_datetime_to_zulu(datetime.now(timezone.utc))
         status_msg = WsServerMessage(
             event="MSG_STATUS",
             payload=MessageStatusBroadcastPayload(
@@ -153,7 +153,7 @@ async def handle_presence(user_id: int, payload: PresencePayload):
     try:
         status = payload.status
 
-        server_timestamp = format_datetime_to_zulu(datetime.utcnow())
+        server_timestamp = format_datetime_to_zulu(datetime.now(timezone.utc))
         presence_msg = WsServerMessage(
             event="PRESENCE",
             payload=PresenceBroadcastPayload(
@@ -189,7 +189,7 @@ async def handle_edit_message(user_id: int, payload: EditMessagePayload, db: Ses
             return
 
         # Construction server timestamp
-        server_timestamp = format_datetime_to_zulu(datetime.utcnow())
+        server_timestamp = format_datetime_to_zulu(datetime.now(timezone.utc))
 
         # Only sender can edit
         if message.fld_sender_id != user_id:
@@ -260,7 +260,7 @@ async def handle_delete_message(user_id: int, payload: DeleteMessagePayload, db:
         if not message:
             return
 
-        server_timestamp = format_datetime_to_zulu(datetime.utcnow())
+        server_timestamp = format_datetime_to_zulu(datetime.now(timezone.utc))
 
         if delete_type == "deleteForEveryone":
             if message.fld_sender_id != user_id:

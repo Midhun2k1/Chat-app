@@ -1,5 +1,5 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, DateTime, Text
-from datetime import datetime
+from datetime import datetime, timezone
 from .database import Base
 
 class User(Base):
@@ -20,8 +20,8 @@ class User(Base):
     fld_is_verified = Column(Boolean, default=False)
     fld_verification_code = Column(String(10), nullable=True)
 
-    fld_created_at = Column(DateTime, default=datetime.utcnow)
-    fld_updated_at = Column(DateTime, onupdate=datetime.utcnow)
+    fld_created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    fld_updated_at = Column(DateTime(timezone=True), onupdate=lambda: datetime.now(timezone.utc))
 
 
 class Conversation(Base):
@@ -29,7 +29,7 @@ class Conversation(Base):
 
     fld_conversation_Id = Column(Integer, primary_key=True, index=True)
 
-    fld_created_at = Column(DateTime, default=datetime.utcnow)
+    fld_created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
 class ConversationParticipant(Base):
@@ -56,7 +56,7 @@ class Message(Base):
 
     fld_is_deleted_for_everyone = Column(Boolean, default=False)
 
-    fld_created_at = Column(DateTime, default=datetime.utcnow)
+    fld_created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
 class MessageDelete(Base):
@@ -67,4 +67,4 @@ class MessageDelete(Base):
     message_id = Column(Integer, ForeignKey("tbl_messages.fld_message_id"))
     user_id = Column(Integer, ForeignKey("tbl_users.fld_user_id"))
 
-    deleted_at = Column(DateTime, default=datetime.utcnow)
+    deleted_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
