@@ -1,9 +1,11 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from sqlalchemy.orm import Session
+from sqlalchemy import text
 from app.api import auth_routes, user_routes, chat_routes, chat_ws
-from app.db.database import engine
+from app.db.database import engine, get_db
 from app.db import models
 from app.schemas.response import StandardResponse
 from app.utils.response_utils import error_response, success_response
@@ -57,3 +59,24 @@ app.include_router(chat_ws.router)
 @app.get("/", response_model=StandardResponse[None])
 def root():
     return success_response(message="Chat app is running 🚀")
+
+
+@app.get("/health", response_model=StandardResponse[dict])
+def health_check(db: Session = Depends(get_db)):
+    try:
+        # Perform a quick query to verify the database connection is OK
+        db.execute(text("SELECT 1"))
+        return success_response(
+            data={
+                "status": "healthy",
+                "database": "connected"
+            },
+            message="Application and Database are healthy! 🚀"
+        )
+    except Exception as e:
+        return error_response(
+            message="Database connection failed",
+            code="DATABASE_CONNECTION_ERROR",
+            details=str(e),
+            status_code=500
+        )

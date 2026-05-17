@@ -881,6 +881,24 @@
           }
         }
       }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardResponse_dict_"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -943,7 +961,7 @@
             "title": "Last Message Text"
           },
           "updated_at": {
-            "type": "string",
+            "type": "number",
             "title": "Updated At"
           },
           "avatar_url": {
@@ -1554,6 +1572,41 @@
           "message"
         ],
         "title": "StandardResponse[UserMeResponse]"
+      },
+      "StandardResponse_dict_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "status": {
+            "type": "integer",
+            "title": "Status"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "status",
+          "message"
+        ],
+        "title": "StandardResponse[dict]"
       },
       "Token": {
         "properties": {
