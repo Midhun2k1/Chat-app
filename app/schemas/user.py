@@ -30,6 +30,7 @@ class UserSearchResponse(BaseModel):
     lastname: str
     email: Optional[str] = None
     phone: Optional[str] = None
+    avatar_url: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -51,3 +52,4 @@ class UserMeResponse(BaseModel):
     username: str
     email: str
     is_verified: bool
+    avatar_url: Optional[str] = None

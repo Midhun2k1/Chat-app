@@ -13,7 +13,15 @@ from app.utils.response_utils import error_response, success_response
 
 models.Base.metadata.create_all(bind=engine)
 
+import os
+from fastapi.staticfiles import StaticFiles
+
+# Ensure the upload folder exists
+os.makedirs("static/uploads/avatars", exist_ok=True)
+
 app = FastAPI()
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Exception Handlers
 @app.exception_handler(StarletteHTTPException)
