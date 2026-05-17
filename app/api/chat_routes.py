@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy import func, case
+from datetime import datetime
 
 
 from app.auth.dependencies import get_current_user
@@ -11,6 +12,7 @@ from typing import List
 from app.schemas.conversation import ConversationID, ChatList, ConversationCreateRequest, ChatUserDetailsRequest, UserDetail
 from app.schemas.message import MessageList, MessageFetchRequest, MarkAsReadRequest
 from app.utils.response_utils import success_response, error_response
+from app.utils.time_utils import format_datetime_to_zulu
 
 
 router = APIRouter()
@@ -125,7 +127,7 @@ def get_messages(
             "message_id": msg.fld_message_id,
             "sender_id": msg.fld_sender_id,
             "message": msg.fld_message,
-            "created_at": str(msg.fld_created_at),
+            "created_at": format_datetime_to_zulu(msg.fld_created_at),
             "is_read": msg.fld_is_read,
             "is_deleted_for_everyone": msg.fld_is_deleted_for_everyone
         }
@@ -265,8 +267,8 @@ def get_user_chats(
             other_names = [p["firstname"] for p in parts if p["user_id"] != user_id]
             chat_name = ", ".join(other_names) if other_names else "Group Chat"
 
-        # Calculate updated_at Unix epoch timestamp (seconds)
-        updated_at_epoch = chat.last_message_time.timestamp() if chat.last_message_time else 0.0
+        # Calculate updated_at formatted Zulu time string
+        updated_at_str = format_datetime_to_zulu(chat.last_message_time) if chat.last_message_time else format_datetime_to_zulu(datetime.utcnow())
 
         result.append({
             "id": str(cid),
@@ -274,7 +276,7 @@ def get_user_chats(
             "type": chat_type,
             "unread_count": chat.unread_count,
             "last_message_text": chat.last_message_text,
-            "updated_at": updated_at_epoch,
+            "updated_at": updated_at_str,
             "avatar_url": None,
             "participants": {
                 "userIDs": user_ids_str

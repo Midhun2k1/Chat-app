@@ -2,6 +2,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from app.websocket.manager import manager
 from app.db.models import Message, ConversationParticipant, MessageDelete
+from app.utils.time_utils import format_datetime_to_zulu
 from app.schemas.websocket import (
     SendMessagePayload, TypingPayload, MessageStatusPayload, PresencePayload,
     EditMessagePayload, DeleteMessagePayload, WsServerMessage,
@@ -33,7 +34,7 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
         db.commit()
         db.refresh(new_message)
 
-        server_timestamp = datetime.utcnow().isoformat()
+        server_timestamp = format_datetime_to_zulu(datetime.utcnow())
 
         # Construct ACK message
         ack_msg = WsServerMessage(
@@ -62,7 +63,7 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
                 chatId=str(conversation_id),
                 text=text,
                 senderId=str(user_id),
-                createdAt=new_message.fld_created_at.isoformat(),
+                createdAt=format_datetime_to_zulu(new_message.fld_created_at),
                 serverTimestamp=server_timestamp,
                 isDeletedForEveryone=new_message.fld_is_deleted_for_everyone
             ),
@@ -88,7 +89,7 @@ async def handle_typing(user_id: int, payload: TypingPayload):
         chat_id = payload.chatId
         is_typing = payload.isTyping
 
-        server_timestamp = datetime.utcnow().isoformat()
+        server_timestamp = format_datetime_to_zulu(datetime.utcnow())
         typing_msg = WsServerMessage(
             event="TYPING",
             payload=TypingBroadcastPayload(
@@ -128,7 +129,7 @@ async def handle_message_status(user_id: int, payload: MessageStatusPayload, db:
 
                 db.commit()
 
-        server_timestamp = datetime.utcnow().isoformat()
+        server_timestamp = format_datetime_to_zulu(datetime.utcnow())
         status_msg = WsServerMessage(
             event="MSG_STATUS",
             payload=MessageStatusBroadcastPayload(
@@ -152,7 +153,7 @@ async def handle_presence(user_id: int, payload: PresencePayload):
     try:
         status = payload.status
 
-        server_timestamp = datetime.utcnow().isoformat()
+        server_timestamp = format_datetime_to_zulu(datetime.utcnow())
         presence_msg = WsServerMessage(
             event="PRESENCE",
             payload=PresenceBroadcastPayload(
@@ -188,7 +189,7 @@ async def handle_edit_message(user_id: int, payload: EditMessagePayload, db: Ses
             return
 
         # Construction server timestamp
-        server_timestamp = datetime.utcnow().isoformat()
+        server_timestamp = format_datetime_to_zulu(datetime.utcnow())
 
         # Only sender can edit
         if message.fld_sender_id != user_id:
@@ -221,7 +222,7 @@ async def handle_edit_message(user_id: int, payload: EditMessagePayload, db: Ses
             payload=ReceiveEditMessagePayload(
                 id=str(message_id),
                 text=new_text,
-                editedAt=str(edited_at) if edited_at else server_timestamp
+                editedAt=format_datetime_to_zulu(edited_at) if edited_at else server_timestamp
             ),
             timestamp=server_timestamp
         )
@@ -259,7 +260,7 @@ async def handle_delete_message(user_id: int, payload: DeleteMessagePayload, db:
         if not message:
             return
 
-        server_timestamp = datetime.utcnow().isoformat()
+        server_timestamp = format_datetime_to_zulu(datetime.utcnow())
 
         if delete_type == "deleteForEveryone":
             if message.fld_sender_id != user_id:
@@ -301,7 +302,7 @@ async def handle_delete_message(user_id: int, payload: DeleteMessagePayload, db:
                 payload=ReceiveDeleteMessagePayload(
                     id=str(message_id),
                     deleteType=delete_type,
-                    deletedAt=str(deleted_at) if deleted_at else server_timestamp
+                    deletedAt=format_datetime_to_zulu(deleted_at) if deleted_at else server_timestamp
                 ),
                 timestamp=server_timestamp
             )

@@ -13,7 +13,7 @@ class ChatItem(BaseModel):
     type: str  # 'individual' or 'group'
     unread_count: int
     last_message_text: Optional[str] = None
-    updated_at: float  # Unix epoch timestamp in seconds
+    updated_at: str  # ISO Zulu time string
     avatar_url: Optional[str] = None
     participants: ChatParticipants
     lastMessageSentUsername: str

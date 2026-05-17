@@ -961,7 +961,7 @@
             "title": "Last Message Text"
           },
           "updated_at": {
-            "type": "number",
+            "type": "string",
             "title": "Updated At"
           },
           "avatar_url": {

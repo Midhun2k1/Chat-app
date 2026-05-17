@@ -287,7 +287,7 @@ export interface components {
             /** Last Message Text */
             last_message_text?: string | null;
             /** Updated At */
-            updated_at: number;
+            updated_at: string;
             /** Avatar Url */
             avatar_url?: string | null;
             participants: components["schemas"]["ChatParticipants"];
