@@ -123,24 +123,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/users/search": {
+    "/user-search": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Search Users */
-        get: operations["search_users_users_search_get"];
+        get?: never;
         put?: never;
-        post?: never;
+        /** Search Users */
+        post: operations["search_users_user_search_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/conversation/{user_id}": {
+    "/conversation": {
         parameters: {
             query?: never;
             header?: never;
@@ -150,31 +150,31 @@ export interface paths {
         get?: never;
         put?: never;
         /** Create Or Get Conversation */
-        post: operations["create_or_get_conversation_conversation__user_id__post"];
+        post: operations["create_or_get_conversation_conversation_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/messages/{conversation_id}": {
+    "/messages": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get Messages */
-        get: operations["get_messages_messages__conversation_id__get"];
+        get?: never;
         put?: never;
-        post?: never;
+        /** Get Messages */
+        post: operations["get_messages_messages_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/mark-as-read/{conversation_id}": {
+    "/mark-as-read": {
         parameters: {
             query?: never;
             header?: never;
@@ -184,7 +184,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Mark As Read */
-        post: operations["mark_as_read_mark_as_read__conversation_id__post"];
+        post: operations["mark_as_read_mark_as_read_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -202,6 +202,23 @@ export interface paths {
         get: operations["get_user_chats_chats_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat-users-details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Get Chat Users Details */
+        post: operations["get_chat_users_details_chat_users_details_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -242,23 +259,43 @@ export interface components {
         };
         /** ChatItem */
         ChatItem: {
-            /** Conversation Id */
-            conversation_id: number;
-            /** User Id */
-            user_id: number;
-            /** Username */
-            username: string;
-            /** Last Message */
-            last_message: string;
-            /** Timestamp */
-            timestamp: string;
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Type */
+            type: string;
             /** Unread Count */
             unread_count: number;
+            /** Last Message Text */
+            last_message_text?: string | null;
+            /** Updated At */
+            updated_at: string;
+            /** Avatar Url */
+            avatar_url?: string | null;
+            participants: components["schemas"]["ChatParticipants"];
+            /** Lastmessagesentusername */
+            lastMessageSentUsername: string;
         };
         /** ChatList */
         ChatList: {
             /** Chats */
             chats: components["schemas"]["ChatItem"][];
+        };
+        /** ChatParticipants */
+        ChatParticipants: {
+            /** Userids */
+            userIDs: string[];
+        };
+        /** ChatUserDetailsRequest */
+        ChatUserDetailsRequest: {
+            /** Chatid */
+            chatId: string;
+        };
+        /** ConversationCreateRequest */
+        ConversationCreateRequest: {
+            /** User Id */
+            user_id: number;
         };
         /** ConversationID */
         ConversationID: {
@@ -300,6 +337,26 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** MarkAsReadRequest */
+        MarkAsReadRequest: {
+            /** Conversation Id */
+            conversation_id: number;
+        };
+        /** MessageFetchRequest */
+        MessageFetchRequest: {
+            /** Conversation Id */
+            conversation_id: number;
+            /**
+             * Skip
+             * @default 0
+             */
+            skip: number | null;
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number | null;
+        };
         /** MessageItem */
         MessageItem: {
             /** Message Id */
@@ -312,6 +369,8 @@ export interface components {
             created_at: string;
             /** Is Read */
             is_read: boolean;
+            /** Is Deleted For Everyone */
+            is_deleted_for_everyone: boolean;
         };
         /** MessageList */
         MessageList: {
@@ -360,6 +419,17 @@ export interface components {
             /** Message */
             message: string;
             data?: components["schemas"]["ConversationID"] | null;
+        };
+        /** StandardResponse[List[UserDetail]] */
+        StandardResponse_List_UserDetail__: {
+            /** Success */
+            success: boolean;
+            /** Status */
+            status: number;
+            /** Message */
+            message: string;
+            /** Data */
+            data?: components["schemas"]["UserDetail"][] | null;
         };
         /** StandardResponse[MessageList] */
         StandardResponse_MessageList_: {
@@ -421,6 +491,27 @@ export interface components {
             /** Token Type */
             token_type: string;
         };
+        /** UserDetail */
+        UserDetail: {
+            /** Userid */
+            userId: string;
+            /** Name */
+            name: string;
+            /** Is Me */
+            is_me: boolean;
+            /** Username */
+            username?: string | null;
+            /** First Name */
+            first_name?: string | null;
+            /** Last Name */
+            last_name?: string | null;
+            /** Email */
+            email?: string | null;
+            /** Avatar Url */
+            avatar_url?: string | null;
+            /** Phone Number */
+            phone_number?: string | null;
+        };
         /** UserList */
         UserList: {
             /** Users */
@@ -459,6 +550,11 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+        };
+        /** UserSearchRequest */
+        UserSearchRequest: {
+            /** Query */
+            query: string;
         };
         /** UserSearchResponse */
         UserSearchResponse: {
@@ -864,16 +960,18 @@ export interface operations {
             };
         };
     };
-    search_users_users_search_get: {
+    search_users_user_search_post: {
         parameters: {
-            query: {
-                query: string;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserSearchRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -895,16 +993,18 @@ export interface operations {
             };
         };
     };
-    create_or_get_conversation_conversation__user_id__post: {
+    create_or_get_conversation_conversation_post: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                user_id: number;
-            };
+            path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConversationCreateRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -962,19 +1062,18 @@ export interface operations {
             };
         };
     };
-    get_messages_messages__conversation_id__get: {
+    get_messages_messages_post: {
         parameters: {
-            query?: {
-                skip?: number;
-                limit?: number;
-            };
+            query?: never;
             header?: never;
-            path: {
-                conversation_id: number;
-            };
+            path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MessageFetchRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -1032,16 +1131,18 @@ export interface operations {
             };
         };
     };
-    mark_as_read_mark_as_read__conversation_id__post: {
+    mark_as_read_mark_as_read_post: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                conversation_id: number;
-            };
+            path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkAsReadRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -1142,6 +1243,75 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_chat_users_details_chat_users_details_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatUserDetailsRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardResponse_List_UserDetail__"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
             /** @description Internal Server Error */

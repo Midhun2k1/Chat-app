@@ -73,3 +73,77 @@ async def send_verification_email(email: str, otp: str):
         # Fallback to logging in development
         logger.info(f"🔑 FALLBACK - YOUR VERIFICATION CODE: {otp}")
         return False
+
+
+
+
+
+
+
+""" import os
+import logging
+import resend
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+logger = logging.getLogger(__name__)
+
+# Resend Configuration
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")
+RESEND_FROM = os.getenv("RESEND_FROM", "onboarding@resend.dev")
+
+if RESEND_API_KEY and not RESEND_API_KEY.startswith("re_your"):
+    resend.api_key = RESEND_API_KEY
+
+async def send_verification_email(email: str, otp: str):
+    ""
+    Sends a verification email using Resend API.
+    ""
+    # If API key is missing or is the placeholder, fallback to console logging
+    if not RESEND_API_KEY or RESEND_API_KEY.startswith("re_your"):
+        logger.warning("RESEND_API_KEY not set or is placeholder. Logging OTP to console.")
+        logger.info(f"🔑 YOUR VERIFICATION CODE FOR {email}: {otp}")
+        return True
+
+    # HTML version with highlighting
+    html_content = f""
+    <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+                <h2 style="color: #2c3e50; text-align: center;">Verify Your Email</h2>
+                <p>Hello,</p>
+                <p>Thank you for using Messenger App. Please use the following verification code to complete your request:</p>
+                <div style="background-color: #f4f7f6; padding: 20px; text-align: center; margin: 20px 0; border-radius: 6px; border: 1px dashed #2c3e50;">
+                    <span style="font-size: 32px; font-weight: bold; color: #2c3e50; letter-spacing: 5px;">{otp}</span>
+                </div>
+                <p>This code is valid for a limited time. If you did not request this code, you can safely ignore this email.</p>
+                <p style="margin-top: 30px; border-top: 1px solid #eeeeee; padding-top: 20px;">
+                    Best regards,<br>
+                    <strong>Messenger Team</strong>
+                </p>
+            </div>
+        </body>
+    </html>
+    ""
+
+    try:
+        params = {
+            "from": RESEND_FROM,
+            "to": email,
+            "subject": "Verify Your Email - Messenger App",
+            "html": html_content,
+        }
+
+        # Send email via Resend
+        resend.Emails.send(params)
+        
+        logger.info(f"📧 Verification email sent successfully to {email} via Resend")
+        return True
+    except Exception as e:
+        logger.error(f"❌ Failed to send email to {email} via Resend: {str(e)}")
+        # Fallback to logging in development
+        logger.info(f"🔑 FALLBACK - YOUR VERIFICATION CODE: {otp}")
+        return False
+ """

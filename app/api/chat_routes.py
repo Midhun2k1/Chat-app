@@ -7,10 +7,10 @@ from app.auth.dependencies import get_current_user
 from app.db.database import get_db
 from app.db.models import Conversation, ConversationParticipant, Message, User, MessageDelete
 from app.schemas.response import StandardResponse, ErrorResponse
-from app.schemas.conversation import ConversationID, ChatList, ConversationCreateRequest
+from typing import List
+from app.schemas.conversation import ConversationID, ChatList, ConversationCreateRequest, ChatUserDetailsRequest, UserDetail
 from app.schemas.message import MessageList, MessageFetchRequest, MarkAsReadRequest
-from app.utils.response_utils import error_response
-
+from app.utils.response_utils import success_response, error_response
 
 
 router = APIRouter()
@@ -168,12 +168,13 @@ def get_user_chats(
 ):
     user_id = current_user.fld_user_id
 
-    #get latest message per conversation
+    # Subquery: Latest message per conversation
     last_msg_subq = db.query(
         Message.fld_conversation_id,
         func.max(Message.fld_created_at).label("last_time")
     ).group_by(Message.fld_conversation_id).subquery()
 
+    # Subquery: Unread count per conversation for this user
     unread_subq = db.query(
         Message.fld_conversation_id,
         func.count(Message.fld_message_id).label("unread_count")
@@ -182,49 +183,103 @@ def get_user_chats(
         Message.fld_is_read == False
     ).group_by(Message.fld_conversation_id).subquery()
 
-    cp1 = aliased(ConversationParticipant)
-    cp2 = aliased(ConversationParticipant)
-
-    chats = db.query(
-        cp1.fld_conversation_id,
-        User.fld_user_id,
-        User.fld_username,
-        Message.fld_message,
-        Message.fld_created_at,
-        func.coalesce(unread_subq.c.unread_count, 0)
+    # Query conversations current_user is participant in, with latest message and unread count
+    user_convs = db.query(
+        Conversation.fld_conversation_Id,
+        Message.fld_message.label("last_message_text"),
+        Message.fld_created_at.label("last_message_time"),
+        User.fld_username.label("last_message_sender_username"),
+        func.coalesce(unread_subq.c.unread_count, 0).label("unread_count")
     ).join(
-        cp2,
-        (cp1.fld_conversation_id == cp2.fld_conversation_id) &
-        (cp2.fld_user_id != user_id)
-    ).join(
-        User,
-        User.fld_user_id == cp2.fld_user_id
+        ConversationParticipant,
+        ConversationParticipant.fld_conversation_id == Conversation.fld_conversation_Id
     ).join(
         last_msg_subq,
-        last_msg_subq.c.fld_conversation_id == cp1.fld_conversation_id
+        last_msg_subq.c.fld_conversation_id == Conversation.fld_conversation_Id
     ).join(
         Message,
         (Message.fld_conversation_id == last_msg_subq.c.fld_conversation_id) &
         (Message.fld_created_at == last_msg_subq.c.last_time)
+    ).join(
+        User,
+        User.fld_user_id == Message.fld_sender_id
     ).outerjoin(
         unread_subq,
-        unread_subq.c.fld_conversation_id == cp1.fld_conversation_id
+        unread_subq.c.fld_conversation_id == Conversation.fld_conversation_Id
     ).filter(
-        cp1.fld_user_id == user_id
+        ConversationParticipant.fld_user_id == user_id
     ).order_by(
         Message.fld_created_at.desc()
     ).all()
 
-    result = []
+    if not user_convs:
+        return {
+            "success": True,
+            "status": 200,
+            "message": "User chats fetched successfully",
+            "data": {"chats": []}
+        }
 
-    for chat in chats:
+    # Fetch all participants in these conversations in a single batch query
+    conv_ids = [c.fld_conversation_Id for c in user_convs]
+    all_participants = db.query(
+        ConversationParticipant.fld_conversation_id,
+        User.fld_user_id,
+        User.fld_username,
+        User.fld_firstname,
+        User.fld_lastname
+    ).join(
+        User,
+        User.fld_user_id == ConversationParticipant.fld_user_id
+    ).filter(
+        ConversationParticipant.fld_conversation_id.in_(conv_ids)
+    ).all()
+
+    # Group participants by conversation ID in memory
+    from collections import defaultdict
+    participants_by_conv = defaultdict(list)
+    for p in all_participants:
+        participants_by_conv[p.fld_conversation_id].append({
+            "user_id": p.fld_user_id,
+            "username": p.fld_username,
+            "firstname": p.fld_firstname,
+            "lastname": p.fld_lastname
+        })
+
+    result = []
+    for chat in user_convs:
+        cid = chat.fld_conversation_Id
+        parts = participants_by_conv[cid]
+
+        user_ids_str = [str(p["user_id"]) for p in parts]
+        chat_type = "individual" if len(parts) == 2 else "group"
+
+        # Determine chat display name
+        if chat_type == "individual":
+            other_part = next((p for p in parts if p["user_id"] != user_id), None)
+            if other_part:
+                chat_name = f"{other_part['firstname']} {other_part['lastname']}".strip()
+            else:
+                chat_name = "Saved Messages"
+        else:
+            other_names = [p["firstname"] for p in parts if p["user_id"] != user_id]
+            chat_name = ", ".join(other_names) if other_names else "Group Chat"
+
+        # Calculate updated_at Unix epoch timestamp (seconds)
+        updated_at_epoch = chat.last_message_time.timestamp() if chat.last_message_time else 0.0
+
         result.append({
-            "conversation_id": chat[0],
-            "user_id": chat[1],
-            "username": chat[2],
-            "last_message": chat[3],
-            "timestamp": str(chat[4]),
-            "unread_count": chat[5]
+            "id": str(cid),
+            "name": chat_name,
+            "type": chat_type,
+            "unread_count": chat.unread_count,
+            "last_message_text": chat.last_message_text,
+            "updated_at": updated_at_epoch,
+            "avatar_url": None,
+            "participants": {
+                "userIDs": user_ids_str
+            },
+            "lastMessageSentUsername": chat.last_message_sender_username
         })
 
     return {
@@ -234,4 +289,53 @@ def get_user_chats(
         "data": {"chats": result}
     }
 
- 
+
+@router.post("/chat-users-details", response_model=StandardResponse[List[UserDetail]], responses=common_responses)
+def get_chat_users_details(
+    request: ChatUserDetailsRequest,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    try:
+        conv_id = int(request.chatId)
+    except ValueError:
+        return error_response(message="Invalid chat ID format", code="INVALID_REQUEST", status_code=400)
+
+    # Verify that the current_user is a participant in this conversation
+    is_participant = db.query(ConversationParticipant).filter(
+        ConversationParticipant.fld_conversation_id == conv_id,
+        ConversationParticipant.fld_user_id == current_user.fld_user_id
+    ).first()
+
+    if not is_participant:
+        return error_response(message="Unauthorized access to chat details", code="UNAUTHORIZED", status_code=403)
+
+    # Query details of all participants
+    participants = db.query(User).join(
+        ConversationParticipant,
+        ConversationParticipant.fld_user_id == User.fld_user_id
+    ).filter(
+        ConversationParticipant.fld_conversation_id == conv_id
+    ).all()
+
+    user_details = []
+    for user in participants:
+        user_details.append({
+            "userId": str(user.fld_user_id),
+            "name": f"{user.fld_firstname} {user.fld_lastname}".strip(),
+            "is_me": user.fld_user_id == current_user.fld_user_id,
+            "username": user.fld_username,
+            "first_name": user.fld_firstname,
+            "last_name": user.fld_lastname,
+            "email": user.fld_email,
+            "avatar_url": None,
+            "phone_number": user.fld_phone
+        })
+
+    return {
+        "success": True,
+        "status": 200,
+        "message": "Chat user details fetched successfully",
+        "data": user_details
+    }
+
