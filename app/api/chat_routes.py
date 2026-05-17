@@ -229,7 +229,8 @@ def get_user_chats(
         User.fld_user_id,
         User.fld_username,
         User.fld_firstname,
-        User.fld_lastname
+        User.fld_lastname,
+        User.fld_avatar_url
     ).join(
         User,
         User.fld_user_id == ConversationParticipant.fld_user_id
@@ -245,7 +246,8 @@ def get_user_chats(
             "user_id": p.fld_user_id,
             "username": p.fld_username,
             "firstname": p.fld_firstname,
-            "lastname": p.fld_lastname
+            "lastname": p.fld_lastname,
+            "avatar_url": p.fld_avatar_url
         })
 
     result = []
@@ -256,13 +258,18 @@ def get_user_chats(
         user_ids_str = [str(p["user_id"]) for p in parts]
         chat_type = ChatType.INDIVIDUAL if len(parts) == 2 else ChatType.GROUP
 
-        # Determine chat display name
+        # Determine chat display name and avatar url
+        chat_avatar = None
         if chat_type == ChatType.INDIVIDUAL:
             other_part = next((p for p in parts if p["user_id"] != user_id), None)
             if other_part:
                 chat_name = f"{other_part['firstname']} {other_part['lastname']}".strip()
+                chat_avatar = other_part["avatar_url"]
             else:
                 chat_name = "Saved Messages"
+                me_part = next((p for p in parts if p["user_id"] == user_id), None)
+                if me_part:
+                    chat_avatar = me_part["avatar_url"]
         else:
             other_names = [p["firstname"] for p in parts if p["user_id"] != user_id]
             chat_name = ", ".join(other_names) if other_names else "Group Chat"
@@ -276,7 +283,7 @@ def get_user_chats(
             "unread_count": chat.unread_count,
             "last_message_text": chat.last_message_text,
             "updated_at": updated_at_str,
-            "avatar_url": None,
+            "avatar_url": chat_avatar,
             "participants": {
                 "userIDs": user_ids_str
             },

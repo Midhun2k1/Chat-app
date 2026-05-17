@@ -217,7 +217,8 @@ def get_me(current_user: User = Depends(get_current_user)):
         "user_id": current_user.fld_user_id,
         "username": current_user.fld_username,
         "email": current_user.fld_email,
-        "is_verified": current_user.fld_is_verified
+        "is_verified": current_user.fld_is_verified,
+        "avatar_url": current_user.fld_avatar_url
     }
     return {
         "success": True,
