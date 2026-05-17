@@ -1,7 +1,41 @@
+# Environment files
 .env
+.env.*
+!.env.example
+
+# Python virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Python compiled / cache files
+**/__pycache__/
 __pycache__/
 *.py[cod]
 *$py.class
-venv/
-.venv/
-.env
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editor and IDE configurations
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Local test configurations and credentials
+test_*.json
+test_login.json
+test_refresh.json
+test_reg.json
