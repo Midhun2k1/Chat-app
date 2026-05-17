@@ -42,12 +42,9 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_json()
-            # print(f"DEBUG: Incoming WS data from user {user_id}: {data}") # Uncomment for deep debugging
-
             try:
                 ws_msg = WsClientMessage(**data)
-                msg_type = ws_msg.type
-                raw_payload = ws_msg.payload
+                payload = ws_msg.payload
             except Exception as e:
                 print(f"WS Wrapper Validation Error: {e}")
                 continue
@@ -57,47 +54,18 @@ async def websocket_endpoint(websocket: WebSocket):
                 PresencePayload, EditMessagePayload, DeleteMessagePayload
             )
 
-            if msg_type == "SEND_MSG":
-                try:
-                    payload = SendMessagePayload(**raw_payload)
-                    await handle_send_message(user_id, payload, db)
-                except Exception as e:
-                    print(f"SEND_MSG Payload Error: {e}")
-
-            elif msg_type == "TYPING":
-                try:
-                    payload = TypingPayload(**raw_payload)
-                    await handle_typing(user_id, payload)
-                except Exception as e:
-                    print(f"TYPING Payload Error: {e}")
-
-            elif msg_type == "MSG_STATUS":
-                try:
-                    payload = MessageStatusPayload(**raw_payload)
-                    await handle_message_status(user_id, payload, db)
-                except Exception as e:
-                    print(f"MSG_STATUS Payload Error: {e}")
-
-            elif msg_type == "PRESENCE":
-                try:
-                    payload = PresencePayload(**raw_payload)
-                    await handle_presence(user_id, payload)
-                except Exception as e:
-                    print(f"PRESENCE Payload Error: {e}")
-
-            elif msg_type == "EDIT_MSG":
-                try:
-                    payload = EditMessagePayload(**raw_payload)
-                    await handle_edit_message(user_id, payload, db)
-                except Exception as e:
-                    print(f"EDIT_MSG Payload Error: {e}")
-
-            elif msg_type == "DELETE_MSG":
-                try:
-                    payload = DeleteMessagePayload(**raw_payload)
-                    await handle_delete_message(user_id, payload, db)
-                except Exception as e:
-                    print(f"DELETE_MSG Payload Error: {e}")
+            if isinstance(payload, SendMessagePayload):
+                await handle_send_message(user_id, payload, db)
+            elif isinstance(payload, TypingPayload):
+                await handle_typing(user_id, payload)
+            elif isinstance(payload, MessageStatusPayload):
+                await handle_message_status(user_id, payload, db)
+            elif isinstance(payload, PresencePayload):
+                await handle_presence(user_id, payload)
+            elif isinstance(payload, EditMessagePayload):
+                await handle_edit_message(user_id, payload, db)
+            elif isinstance(payload, DeleteMessagePayload):
+                await handle_delete_message(user_id, payload, db)
 
     except WebSocketDisconnect:
         manager.disconnect(user_id, websocket)  # ✅ FIXED

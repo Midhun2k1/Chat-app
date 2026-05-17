@@ -56,6 +56,57 @@ app.include_router(user_routes.router)
 app.include_router(chat_routes.router)
 app.include_router(chat_ws.router)
 
+@app.get("/asyncapi.json")
+def get_asyncapi():
+    from pydantic import TypeAdapter
+    from app.schemas.websocket import WsClientMessage, WsServerMessage
+    
+    client_adapter = TypeAdapter(WsClientMessage)
+    server_adapter = TypeAdapter(WsServerMessage)
+    
+    client_schema = client_adapter.json_schema(ref_template="#/components/schemas/{model}")
+    server_schema = server_adapter.json_schema(ref_template="#/components/schemas/{model}")
+    
+    components = {}
+    if "$defs" in client_schema:
+        components.update(client_schema.pop("$defs"))
+    if "$defs" in server_schema:
+        components.update(server_schema.pop("$defs"))
+        
+    components["WsClientMessage"] = client_schema
+    components["WsServerMessage"] = server_schema
+
+    return {
+        "asyncapi": "2.6.0",
+        "info": {
+            "title": "Chat Application WebSocket API",
+            "version": "1.0.0",
+            "description": "Real-time communication events for Chat App",
+        },
+        "channels": {
+            "/ws": {
+                "description": "Main WebSocket server gateway",
+                "publish": {
+                    "summary": "Send messages from Client to Server",
+                    "operationId": "sendClientMessage",
+                    "message": {
+                        "$ref": "#/components/schemas/WsClientMessage"
+                    }
+                },
+                "subscribe": {
+                    "summary": "Listen to messages from Server to Client",
+                    "operationId": "receiveServerMessage",
+                    "message": {
+                        "$ref": "#/components/schemas/WsServerMessage"
+                    }
+                }
+            }
+        },
+        "components": {
+            "schemas": components
+        }
+    }
+
 @app.get("/", response_model=StandardResponse[None])
 def root():
     return success_response(message="Chat app is running 🚀")

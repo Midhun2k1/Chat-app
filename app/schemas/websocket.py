@@ -32,8 +32,15 @@ class DeleteMessagePayload(BaseModel):
 # --- Incoming Message Wrapper ---
 
 class WsClientMessage(BaseModel):
-    type: str
-    payload: Any
+    event: Literal["SEND_MSG", "TYPING", "MSG_STATUS", "PRESENCE", "EDIT_MSG", "DELETE_MSG"]
+    payload: Union[
+        SendMessagePayload,
+        TypingPayload,
+        MessageStatusPayload,
+        PresencePayload,
+        EditMessagePayload,
+        DeleteMessagePayload
+    ]
     timestamp: Optional[Union[int, str]] = None
 
 # --- Outgoing Payloads (Server -> Client) ---

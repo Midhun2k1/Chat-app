@@ -80,6 +80,27 @@ export interface components {
             /** Servertimestamp */
             serverTimestamp: string;
         };
+        /** DeleteMessagePayload */
+        DeleteMessagePayload: {
+            /** Id */
+            id: number | string;
+            /**
+             * Deletetype
+             * @enum {string}
+             */
+            deleteType: "deleteForMe" | "deleteForEveryone";
+            /** Deletedat */
+            deletedAt?: number | string | null;
+        };
+        /** EditMessagePayload */
+        EditMessagePayload: {
+            /** Id */
+            id: number | string;
+            /** Text */
+            text: string;
+            /** Editedat */
+            editedAt?: number | string | null;
+        };
         /** ErrorPayload */
         ErrorPayload: {
             /** Message */
@@ -92,12 +113,30 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** MessageStatusPayload */
+        MessageStatusPayload: {
+            /** Messageid */
+            messageId: number | string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "read" | "delivered";
+        };
         /** PresenceBroadcastPayload */
         PresenceBroadcastPayload: {
             /** Userid */
             userId: string;
             /** Status */
             status: string;
+        };
+        /** PresencePayload */
+        PresencePayload: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "online" | "offline";
         };
         /** ReceiveDeleteMessagePayload */
         ReceiveDeleteMessagePayload: {
@@ -152,12 +191,22 @@ export interface components {
             /** Istyping */
             isTyping: boolean;
         };
+        /** TypingPayload */
+        TypingPayload: {
+            /** Chatid */
+            chatId: number;
+            /** Istyping */
+            isTyping: boolean;
+        };
         /** WsClientMessage */
         WsClientMessage: {
-            /** Type */
-            type: string;
+            /**
+             * Event
+             * @enum {string}
+             */
+            event: "SEND_MSG" | "TYPING" | "MSG_STATUS" | "PRESENCE" | "EDIT_MSG" | "DELETE_MSG";
             /** Payload */
-            payload: unknown;
+            payload: components["schemas"]["SendMessagePayload"] | components["schemas"]["TypingPayload"] | components["schemas"]["MessageStatusPayload"] | components["schemas"]["PresencePayload"] | components["schemas"]["EditMessagePayload"] | components["schemas"]["DeleteMessagePayload"];
             /** Timestamp */
             timestamp?: number | string | null;
         };

@@ -1,0 +1,564 @@
+{
+  "asyncapi": "2.6.0",
+  "info": {
+    "title": "Chat Application WebSocket API",
+    "version": "1.0.0",
+    "description": "Real-time communication events for Chat App"
+  },
+  "channels": {
+    "/ws": {
+      "description": "Main WebSocket server gateway",
+      "publish": {
+        "summary": "Send messages from Client to Server",
+        "operationId": "sendClientMessage",
+        "message": {
+          "$ref": "#/components/schemas/WsClientMessage"
+        }
+      },
+      "subscribe": {
+        "summary": "Listen to messages from Server to Client",
+        "operationId": "receiveServerMessage",
+        "message": {
+          "$ref": "#/components/schemas/WsServerMessage"
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DeleteMessagePayload": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Id"
+          },
+          "deleteType": {
+            "enum": [
+              "deleteForMe",
+              "deleteForEveryone"
+            ],
+            "title": "Deletetype",
+            "type": "string"
+          },
+          "deletedAt": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Deletedat"
+          }
+        },
+        "required": [
+          "id",
+          "deleteType"
+        ],
+        "title": "DeleteMessagePayload",
+        "type": "object"
+      },
+      "EditMessagePayload": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Id"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "editedAt": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Editedat"
+          }
+        },
+        "required": [
+          "id",
+          "text"
+        ],
+        "title": "EditMessagePayload",
+        "type": "object"
+      },
+      "MessageStatusPayload": {
+        "properties": {
+          "messageId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Messageid"
+          },
+          "status": {
+            "enum": [
+              "read",
+              "delivered"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "messageId",
+          "status"
+        ],
+        "title": "MessageStatusPayload",
+        "type": "object"
+      },
+      "PresencePayload": {
+        "properties": {
+          "status": {
+            "enum": [
+              "online",
+              "offline"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "PresencePayload",
+        "type": "object"
+      },
+      "SendMessagePayload": {
+        "properties": {
+          "chatId": {
+            "title": "Chatid",
+            "type": "integer"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Id"
+          }
+        },
+        "required": [
+          "chatId",
+          "text",
+          "id"
+        ],
+        "title": "SendMessagePayload",
+        "type": "object"
+      },
+      "TypingPayload": {
+        "properties": {
+          "chatId": {
+            "title": "Chatid",
+            "type": "integer"
+          },
+          "isTyping": {
+            "title": "Istyping",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "chatId",
+          "isTyping"
+        ],
+        "title": "TypingPayload",
+        "type": "object"
+      },
+      "AckDeleteMessagePayload": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "deletedAt": {
+            "title": "Deletedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "deletedAt"
+        ],
+        "title": "AckDeleteMessagePayload",
+        "type": "object"
+      },
+      "AckEditMessagePayload": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "editedAt": {
+            "title": "Editedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "editedAt"
+        ],
+        "title": "AckEditMessagePayload",
+        "type": "object"
+      },
+      "AckSendMessagePayload": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "serverTimestamp": {
+            "title": "Servertimestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "serverTimestamp"
+        ],
+        "title": "AckSendMessagePayload",
+        "type": "object"
+      },
+      "ErrorPayload": {
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "ErrorPayload",
+        "type": "object"
+      },
+      "MessageStatusBroadcastPayload": {
+        "properties": {
+          "messageId": {
+            "title": "Messageid",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "messageId",
+          "status"
+        ],
+        "title": "MessageStatusBroadcastPayload",
+        "type": "object"
+      },
+      "PresenceBroadcastPayload": {
+        "properties": {
+          "userId": {
+            "title": "Userid",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "userId",
+          "status"
+        ],
+        "title": "PresenceBroadcastPayload",
+        "type": "object"
+      },
+      "ReceiveDeleteMessagePayload": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "deleteType": {
+            "title": "Deletetype",
+            "type": "string"
+          },
+          "deletedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Deletedat"
+          }
+        },
+        "required": [
+          "id",
+          "deleteType"
+        ],
+        "title": "ReceiveDeleteMessagePayload",
+        "type": "object"
+      },
+      "ReceiveEditMessagePayload": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "editedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Editedat"
+          }
+        },
+        "required": [
+          "id",
+          "text"
+        ],
+        "title": "ReceiveEditMessagePayload",
+        "type": "object"
+      },
+      "ReceiveMessagePayload": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "chatId": {
+            "title": "Chatid",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "senderId": {
+            "title": "Senderid",
+            "type": "string"
+          },
+          "createdAt": {
+            "title": "Createdat",
+            "type": "string"
+          },
+          "serverTimestamp": {
+            "title": "Servertimestamp",
+            "type": "string"
+          },
+          "isDeletedForEveryone": {
+            "title": "Isdeletedforeveryone",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "chatId",
+          "text",
+          "senderId",
+          "createdAt",
+          "serverTimestamp",
+          "isDeletedForEveryone"
+        ],
+        "title": "ReceiveMessagePayload",
+        "type": "object"
+      },
+      "TypingBroadcastPayload": {
+        "properties": {
+          "chatId": {
+            "title": "Chatid",
+            "type": "string"
+          },
+          "userId": {
+            "title": "Userid",
+            "type": "string"
+          },
+          "isTyping": {
+            "title": "Istyping",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "chatId",
+          "userId",
+          "isTyping"
+        ],
+        "title": "TypingBroadcastPayload",
+        "type": "object"
+      },
+      "WsClientMessage": {
+        "properties": {
+          "event": {
+            "enum": [
+              "SEND_MSG",
+              "TYPING",
+              "MSG_STATUS",
+              "PRESENCE",
+              "EDIT_MSG",
+              "DELETE_MSG"
+            ],
+            "title": "Event",
+            "type": "string"
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SendMessagePayload"
+              },
+              {
+                "$ref": "#/components/schemas/TypingPayload"
+              },
+              {
+                "$ref": "#/components/schemas/MessageStatusPayload"
+              },
+              {
+                "$ref": "#/components/schemas/PresencePayload"
+              },
+              {
+                "$ref": "#/components/schemas/EditMessagePayload"
+              },
+              {
+                "$ref": "#/components/schemas/DeleteMessagePayload"
+              }
+            ],
+            "title": "Payload"
+          },
+          "timestamp": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Timestamp"
+          }
+        },
+        "required": [
+          "event",
+          "payload"
+        ],
+        "title": "WsClientMessage",
+        "type": "object"
+      },
+      "WsServerMessage": {
+        "properties": {
+          "event": {
+            "enum": [
+              "ACK_SEND_MSG",
+              "RECEIVE_MSG",
+              "TYPING",
+              "MSG_STATUS",
+              "PRESENCE",
+              "ACK_EDIT_MSG",
+              "RECEIVE_EDIT_MSG",
+              "ACK_DELETE_MSG",
+              "RECEIVE_DELETE_MSG",
+              "ERROR"
+            ],
+            "title": "Event",
+            "type": "string"
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AckSendMessagePayload"
+              },
+              {
+                "$ref": "#/components/schemas/ReceiveMessagePayload"
+              },
+              {
+                "$ref": "#/components/schemas/TypingBroadcastPayload"
+              },
+              {
+                "$ref": "#/components/schemas/MessageStatusBroadcastPayload"
+              },
+              {
+                "$ref": "#/components/schemas/PresenceBroadcastPayload"
+              },
+              {
+                "$ref": "#/components/schemas/AckEditMessagePayload"
+              },
+              {
+                "$ref": "#/components/schemas/ReceiveEditMessagePayload"
+              },
+              {
+                "$ref": "#/components/schemas/AckDeleteMessagePayload"
+              },
+              {
+                "$ref": "#/components/schemas/ReceiveDeleteMessagePayload"
+              },
+              {
+                "$ref": "#/components/schemas/ErrorPayload"
+              }
+            ],
+            "title": "Payload"
+          },
+          "timestamp": {
+            "title": "Timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "event",
+          "payload",
+          "timestamp"
+        ],
+        "title": "WsServerMessage",
+        "type": "object"
+      }
+    }
+  }
+}
