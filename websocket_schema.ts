@@ -63,8 +63,11 @@ export interface components {
         AckDeleteMessagePayload: {
             /** Id */
             id: string;
-            /** Deletedat */
-            deletedAt: string;
+            /**
+             * Deletetype
+             * @enum {string}
+             */
+            deleteType: "deleteForMe" | "deleteForEveryone" | "both";
         };
         /** AckEditMessagePayload */
         AckEditMessagePayload: {
@@ -88,9 +91,11 @@ export interface components {
              * Deletetype
              * @enum {string}
              */
-            deleteType: "deleteForMe" | "deleteForEveryone";
-            /** Deletedat */
-            deletedAt?: number | string | null;
+            deleteType: "deleteForMe" | "deleteForEveryone" | "both";
+            /** Deletedforeveryoneat */
+            deletedForEveryoneAt?: number | string | null;
+            /** Deletedformeat */
+            deletedForMeAt?: number | string | null;
         };
         /** EditMessagePayload */
         EditMessagePayload: {
@@ -142,10 +147,11 @@ export interface components {
         ReceiveDeleteMessagePayload: {
             /** Id */
             id: string;
-            /** Deletetype */
-            deleteType: string;
-            /** Deletedat */
-            deletedAt?: string | null;
+            /**
+             * Deletetype
+             * @enum {string}
+             */
+            deleteType: "deleteForEveryone" | "both";
         };
         /** ReceiveEditMessagePayload */
         ReceiveEditMessagePayload: {

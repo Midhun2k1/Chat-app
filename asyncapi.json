@@ -63,12 +63,13 @@
           "deleteType": {
             "enum": [
               "deleteForMe",
-              "deleteForEveryone"
+              "deleteForEveryone",
+              "both"
             ],
             "title": "Deletetype",
             "type": "string"
           },
-          "deletedAt": {
+          "deletedForEveryoneAt": {
             "anyOf": [
               {
                 "type": "integer"
@@ -81,7 +82,22 @@
               }
             ],
             "default": null,
-            "title": "Deletedat"
+            "title": "Deletedforeveryoneat"
+          },
+          "deletedForMeAt": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Deletedformeat"
           }
         },
         "required": [
@@ -231,14 +247,19 @@
             "title": "Id",
             "type": "string"
           },
-          "deletedAt": {
-            "title": "Deletedat",
+          "deleteType": {
+            "enum": [
+              "deleteForMe",
+              "deleteForEveryone",
+              "both"
+            ],
+            "title": "Deletetype",
             "type": "string"
           }
         },
         "required": [
           "id",
-          "deletedAt"
+          "deleteType"
         ],
         "title": "AckDeleteMessagePayload",
         "type": "object"
@@ -335,20 +356,12 @@
             "type": "string"
           },
           "deleteType": {
+            "enum": [
+              "deleteForEveryone",
+              "both"
+            ],
             "title": "Deletetype",
             "type": "string"
-          },
-          "deletedAt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Deletedat"
           }
         },
         "required": [

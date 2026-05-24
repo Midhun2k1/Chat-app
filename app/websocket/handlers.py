@@ -251,8 +251,8 @@ async def handle_delete_message(user_id: int, payload: DeleteMessagePayload, db:
     try:
         message_id = payload.id
         delete_type = payload.deleteType
-        deleted_at = payload.deletedAt
-
+        deleted_at_for_everyone = payload.deletedForEveryoneAt
+        deleted_at_for_me = payload.deletedForMeAt
         message = db.query(Message).filter(
             Message.client_message_id == message_id
         ).first()
@@ -275,12 +275,37 @@ async def handle_delete_message(user_id: int, payload: DeleteMessagePayload, db:
                 return
 
             message.fld_is_deleted_for_everyone = True
+            message.deleted_for_everyone_at = deleted_at_for_everyone
             db.commit()
 
         elif delete_type == "deleteForMe":
             new_delete = MessageDelete(
                 message_id=message.fld_message_id,
-                user_id=user_id
+                user_id=user_id,
+                deleted_at=deleted_at_for_me
+            )
+            db.add(new_delete)
+            db.commit()
+
+        elif delete_type == "both":
+            # Delete for everyone
+            if message.fld_sender_id != user_id:
+                error_msg = WsServerMessage(
+                    event="ERROR",
+                    payload=ErrorPayload(message="You can only delete your own messages for everyone."),
+                    timestamp=server_timestamp
+                )
+                sender_sockets = manager.active_connections.get(user_id, [])
+                for ws in sender_sockets:
+                    await ws.send_json(error_msg.model_dump())
+                return
+            message.fld_is_deleted_for_everyone = True
+            message.deleted_for_everyone_at = deleted_at_for_everyone
+            # Delete for me
+            new_delete = MessageDelete(
+                message_id=message.fld_message_id,
+                user_id=user_id,
+                deleted_at=deleted_at_for_me
             )
             db.add(new_delete)
             db.commit()
@@ -288,21 +313,23 @@ async def handle_delete_message(user_id: int, payload: DeleteMessagePayload, db:
         # ACK sender
         ack_msg = WsServerMessage(
             event="ACK_DELETE_MSG",
-            payload=AckDeleteMessagePayload(id=str(message_id), deletedAt=server_timestamp),
+            payload=AckDeleteMessagePayload(
+                id=str(message_id),
+                deleteType=delete_type
+            ),
             timestamp=server_timestamp
         )
         sender_sockets = manager.active_connections.get(user_id, [])
         for ws in sender_sockets:
             await ws.send_json(ack_msg.model_dump())
 
-        # Broadcast delete ONLY for 'deleteForEveryone'
-        if delete_type == "deleteForEveryone":
+        # Broadcast delete ONLY for 'deleteForEveryone' and 'both'
+        if delete_type in ("deleteForEveryone", "both"):
             receive_delete_msg = WsServerMessage(
                 event="RECEIVE_DELETE_MSG",
                 payload=ReceiveDeleteMessagePayload(
                     id=str(message_id),
-                    deleteType=delete_type,
-                    deletedAt=format_datetime_to_zulu(deleted_at) if deleted_at else server_timestamp
+                    deleteType=delete_type
                 ),
                 timestamp=server_timestamp
             )

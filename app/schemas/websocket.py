@@ -26,8 +26,9 @@ class EditMessagePayload(BaseModel):
 
 class DeleteMessagePayload(BaseModel):
     id: Union[int, str]
-    deleteType: Literal["deleteForMe", "deleteForEveryone"]
-    deletedAt: Optional[Union[int, str]] = None
+    deleteType: Literal["deleteForMe", "deleteForEveryone", "both"]
+    deletedForEveryoneAt: Optional[Union[int, str]] = None
+    deletedForMeAt: Optional[Union[int, str]] = None
 
 # --- Incoming Message Wrapper ---
 
@@ -82,12 +83,11 @@ class ReceiveEditMessagePayload(BaseModel):
 
 class AckDeleteMessagePayload(BaseModel):
     id: str
-    deletedAt: str
+    deleteType: Literal["deleteForMe", "deleteForEveryone", "both"]
 
 class ReceiveDeleteMessagePayload(BaseModel):
     id: str
-    deleteType: str
-    deletedAt: Optional[str] = None
+    deleteType: Literal["deleteForEveryone", "both"] # deleteForMe is not broadcast
 
 class ErrorPayload(BaseModel):
     message: str

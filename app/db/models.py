@@ -59,7 +59,7 @@ class Message(Base):
     fld_is_deleted_for_everyone = Column(Boolean, default=False)
 
     fld_created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-
+    deleted_for_everyone_at = Column(DateTime(timezone=True), nullable=True)
 
 class MessageDelete(Base):
     __tablename__ = "tbl_message_deletes"
