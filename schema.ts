@@ -420,7 +420,7 @@ export interface components {
         /** MessageItem */
         MessageItem: {
             /** Message Id */
-            message_id: number;
+            message_id: string;
             /** Sender Id */
             sender_id: number;
             /** Message */

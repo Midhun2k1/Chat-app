@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 
 class MessageItem(BaseModel):
-    message_id: int
+    message_id: str
     sender_id: int
     message: str
     created_at: str

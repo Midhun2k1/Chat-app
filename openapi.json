@@ -1280,7 +1280,7 @@
       "MessageItem": {
         "properties": {
           "message_id": {
-            "type": "integer",
+            "type": "string",
             "title": "Message Id"
           },
           "sender_id": {

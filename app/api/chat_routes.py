@@ -124,7 +124,7 @@ def get_messages(
     # Format messages for the response
     formatted_messages = [
         {
-            "message_id": msg.fld_message_id,
+            "message_id": msg.client_message_id,
             "sender_id": msg.fld_sender_id,
             "message": msg.fld_message,
             "created_at": format_datetime_to_zulu(msg.fld_created_at),
