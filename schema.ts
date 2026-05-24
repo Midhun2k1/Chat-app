@@ -431,6 +431,8 @@ export interface components {
             is_read: boolean;
             /** Is Deleted For Everyone */
             is_deleted_for_everyone: boolean;
+            /** Is Delete For Me */
+            is_delete_for_me: boolean;
         };
         /** MessageList */
         MessageList: {

@@ -111,14 +111,14 @@ def get_messages(
     skip = request.skip
     limit = request.limit
 
-    # Subquery for messages deleted for the current user
-    deleted_ids = db.query(MessageDelete.message_id).filter(
+    # Get message IDs deleted for the current user
+    deleted_ids_rows = db.query(MessageDelete.message_id).filter(
         MessageDelete.user_id == current_user.fld_user_id
-    ).subquery()
+    ).all()
+    deleted_ids = {row[0] for row in deleted_ids_rows}
 
     messages = db.query(Message).filter(
-        Message.fld_conversation_id == conversation_id,
-        ~Message.fld_message_id.in_(deleted_ids)
+        Message.fld_conversation_id == conversation_id
     ).order_by(Message.fld_created_at.desc()).offset(skip).limit(limit).all()
 
     # Format messages for the response
@@ -129,7 +129,8 @@ def get_messages(
             "message": msg.fld_message,
             "created_at": format_datetime_to_zulu(msg.fld_created_at),
             "is_read": msg.fld_is_read,
-            "is_deleted_for_everyone": msg.fld_is_deleted_for_everyone
+            "is_deleted_for_everyone": msg.fld_is_deleted_for_everyone,
+            "is_delete_for_me": msg.fld_message_id in deleted_ids
         }
         for msg in messages
     ]

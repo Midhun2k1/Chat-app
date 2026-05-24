@@ -1302,6 +1302,10 @@
           "is_deleted_for_everyone": {
             "type": "boolean",
             "title": "Is Deleted For Everyone"
+          },
+          "is_delete_for_me": {
+            "type": "boolean",
+            "title": "Is Delete For Me"
           }
         },
         "type": "object",
@@ -1311,7 +1315,8 @@
           "message",
           "created_at",
           "is_read",
-          "is_deleted_for_everyone"
+          "is_deleted_for_everyone",
+          "is_delete_for_me"
         ],
         "title": "MessageItem"
       },
