@@ -3,13 +3,13 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.db.models import User
-from app.schemas.user import UserRegister, UserLogin, EmailVerification, ResendOTP, AuthResponseData, UserMeResponse
+from app.schemas.user import UserRegister, UserLogin, EmailVerification, ResendOTP, AuthResponseData, UserMeResponse, ForgotPasswordRequest, ResetPasswordRequest
 from app.schemas.token import Token, RefreshTokenRequest
 from app.schemas.response import StandardResponse, ErrorResponse
 from app.auth.auth import hash_password, verify_password, create_access_token, create_refresh_token, SECRET_KEY, ALGORITHM
 from app.auth.dependencies import get_current_user
 from app.utils.otp_utils import generate_otp
-from app.services.email_service import send_verification_email
+from app.services.email_service import send_verification_email, send_password_reset_email
 from jose import JWTError, jwt
 from sqlalchemy import or_
 
@@ -225,4 +225,38 @@ def get_me(current_user: User = Depends(get_current_user)):
         "status": 200,
         "message": "User details fetched successfully",
         "data": data
+    }
+@router.post("/forgot-password", response_model=StandardResponse[None], responses=common_responses)
+async def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    # Find user by email
+    user = db.query(User).filter(User.fld_email == request.email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    # Generate OTP and store
+    otp = generate_otp()
+    user.fld_reset_code = otp
+    db.commit()
+    # Send reset email
+    await send_password_reset_email(user.fld_email, otp)
+    return {
+        "success": True,
+        "status": 200,
+        "message": "Password reset code sent"
+    }
+@router.post("/reset-password", response_model=StandardResponse[None], responses=common_responses)
+async def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.fld_email == request.email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.fld_reset_code != request.code:
+        raise HTTPException(status_code=400, detail="Invalid reset code")
+    # Update password
+    hashed = hash_password(request.new_password)
+    user.fld_hashed_password = hashed
+    user.fld_reset_code = None
+    db.commit()
+    return {
+        "success": True,
+        "status": 200,
+        "message": "Password has been reset"
     }
