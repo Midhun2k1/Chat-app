@@ -22,35 +22,68 @@ def generate_asyncapi_spec():
     components["WsClientMessage"] = client_schema
     components["WsServerMessage"] = server_schema
 
-    # 3. Assemble the AsyncAPI 2.6.0 Spec
+    # 3. Assemble the AsyncAPI 3.1.0 Spec
     asyncapi_spec = {
-        "asyncapi": "2.6.0",
+        "asyncapi": "3.1.0",
         "info": {
             "title": "Chat Application WebSocket API",
             "version": "1.0.0",
             "description": "Real-time communication events for Chat App",
         },
         "channels": {
-            "/ws": {
+            "wsChannel": {
+                "address": "/ws",
                 "description": "Main WebSocket server gateway",
-                "publish": {
-                    "summary": "Send messages from Client to Server",
-                    "operationId": "sendClientMessage",
-                    "message": {
-                        "$ref": "#/components/schemas/WsClientMessage"
-                    }
-                },
-                "subscribe": {
-                    "summary": "Listen to messages from Server to Client",
-                    "operationId": "receiveServerMessage",
-                    "message": {
-                        "$ref": "#/components/schemas/WsServerMessage"
+                "messages": {
+                    "WsClientMessage": {
+                        "$ref": "#/components/messages/WsClientMessage"
+                    },
+                    "WsServerMessage": {
+                        "$ref": "#/components/messages/WsServerMessage"
                     }
                 }
             }
         },
+        "operations": {
+            "sendClientMessage": {
+                "action": "receive",
+                "channel": {
+                    "$ref": "#/channels/wsChannel"
+                },
+                "summary": "Send messages from Client to Server",
+                "messages": [
+                    {
+                        "$ref": "#/channels/wsChannel/messages/WsClientMessage"
+                    }
+                ]
+            },
+            "receiveServerMessage": {
+                "action": "send",
+                "channel": {
+                    "$ref": "#/channels/wsChannel"
+                },
+                "summary": "Listen to messages from Server to Client",
+                "messages": [
+                    {
+                        "$ref": "#/channels/wsChannel/messages/WsServerMessage"
+                    }
+                ]
+            }
+        },
         "components": {
-            "schemas": components
+            "schemas": components,
+            "messages": {
+                "WsClientMessage": {
+                    "payload": {
+                        "$ref": "#/components/schemas/WsClientMessage"
+                    }
+                },
+                "WsServerMessage": {
+                    "payload": {
+                        "$ref": "#/components/schemas/WsServerMessage"
+                    }
+                }
+            }
         }
     }
     
