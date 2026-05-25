@@ -3,10 +3,11 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.db.models import User
-from app.schemas.user import UserRegister, UserLogin, EmailVerification, ResendOTP, AuthResponseData, UserMeResponse, ForgotPasswordRequest, ResetPasswordRequest
+from app.schemas.user import UserRegister, UserLogin, EmailVerification, ResendOTP, AuthResponseData, UserMeResponse, ForgotPasswordRequest, VerifyOTPRequest, VerifyOTPResponse, ResetPasswordByIdRequest
 from app.schemas.token import Token, RefreshTokenRequest
 from app.schemas.response import StandardResponse, ErrorResponse
 from app.auth.auth import hash_password, verify_password, create_access_token, create_refresh_token, SECRET_KEY, ALGORITHM
+from datetime import datetime, timedelta, timezone
 from app.auth.dependencies import get_current_user
 from app.utils.otp_utils import generate_otp
 from app.services.email_service import send_verification_email, send_password_reset_email
@@ -226,6 +227,8 @@ def get_me(current_user: User = Depends(get_current_user)):
         "message": "User details fetched successfully",
         "data": data
     }
+
+
 @router.post("/forgot-password", response_model=StandardResponse[None], responses=common_responses)
 async def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
     # Find user by email
@@ -235,6 +238,7 @@ async def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(
     # Generate OTP and store
     otp = generate_otp()
     user.fld_reset_code = otp
+    user.fld_reset_code_expiry = datetime.now(timezone.utc) + timedelta(minutes=10)
     db.commit()
     # Send reset email
     await send_password_reset_email(user.fld_email, otp)
@@ -243,17 +247,38 @@ async def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(
         "status": 200,
         "message": "Password reset code sent"
     }
-@router.post("/reset-password", response_model=StandardResponse[None], responses=common_responses)
-async def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db)):
+
+
+@router.post("/verify-forgot-password-otp", response_model=StandardResponse[VerifyOTPResponse], responses=common_responses)
+async def verify_forgot_password_otp(request: VerifyOTPRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.fld_email == request.email).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     if user.fld_reset_code != request.code:
-        raise HTTPException(status_code=400, detail="Invalid reset code")
+        raise HTTPException(status_code=400, detail="Invalid OTP")
+
+    if user.fld_reset_code_expiry and datetime.now(timezone.utc) > user.fld_reset_code_expiry:
+        raise HTTPException(status_code=400, detail="OTP expired")
+    # Clear OTP after successful verification
+    user.fld_reset_code = None
+    user.fld_reset_code_expiry = None
+    db.commit()
+    return {
+        "success": True,
+        "status": 200,
+        "message": "OTP verified",
+        "data": {"user_id": user.fld_user_id}
+    }
+
+
+@router.post("/reset-password", response_model=StandardResponse[None], responses=common_responses)
+async def reset_password(request: ResetPasswordByIdRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.fld_user_id == request.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
     # Update password
     hashed = hash_password(request.new_password)
     user.fld_hashed_password = hashed
-    user.fld_reset_code = None
     db.commit()
     return {
         "success": True,

@@ -20,6 +20,7 @@ class User(Base):
     fld_is_verified = Column(Boolean, default=False)
     fld_verification_code = Column(String(10), nullable=True)
     fld_reset_code = Column(String(10), nullable=True)
+    fld_reset_code_expiry = Column(DateTime(timezone=True), nullable=True)
     fld_avatar_url = Column(String(255), nullable=True, default=None)
 
     fld_created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

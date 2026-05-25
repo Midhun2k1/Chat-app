@@ -48,7 +48,7 @@ async def send_verification_email(email: str, otp: str):
                 <p>This code is valid for a limited time. If you did not request this code, you can safely ignore this email.</p>
                 <p style="margin-top: 30px; border-top: 1px solid #eeeeee; padding-top: 20px;">
                     Best regards,<br>
-                    <strong>PingBee Team</strong>
+                    <strong>Team PingBee</strong>
                 </p>
             </div>
         </body>
@@ -90,7 +90,7 @@ async def send_password_reset_email(email: str, otp: str):
     message["Subject"] = "Reset Your Password - PingBee App"
     
     # Plain text version (fallback)
-    text_content = f"Hello,\n\nYour password reset code for PingBee App is: {otp}\n\nIf you did not request this, please ignore this email.\n\nBest regards,\nPingBee Team"
+    text_content = f"Hello,\n\nYour password reset code for PingBee App is: {otp}\n\nThis code is valid for 10 minutes.\n\nIf you did not request this, please ignore this email.\n\nBest regards,\nPingBee Team"
     message.set_content(text_content)
 
     # HTML version with highlighting
@@ -104,10 +104,10 @@ async def send_password_reset_email(email: str, otp: str):
                 <div style="background-color: #f9ebea; padding: 20px; text-align: center; margin: 20px 0; border-radius: 6px; border: 1px dashed #c0392b;">
                     <span style="font-size: 32px; font-weight: bold; color: #c0392b; letter-spacing: 5px;">{otp}</span>
                 </div>
-                <p>This code is valid for a limited time. If you did not request this code, you can safely ignore this email.</p>
+                <p>This code is valid for 10 minutes. If you did not request this code, you can safely ignore this email.</p>
                 <p style="margin-top: 30px; border-top: 1px solid #eeeeee; padding-top: 20px;">
                     Best regards,<br>
-                    <strong>PingBee Team</strong>
+                    <strong>Team PingBee</strong>
                 </p>
             </div>
         </body>

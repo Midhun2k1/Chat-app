@@ -471,6 +471,74 @@
         }
       }
     },
+    "/verify-forgot-password-otp": {
+      "post": {
+        "summary": "Verify Forgot Password Otp",
+        "operationId": "verify_forgot_password_otp_verify_forgot_password_otp_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyOTPRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardResponse_VerifyOTPResponse_"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/reset-password": {
       "post": {
         "summary": "Reset Password",
@@ -479,7 +547,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ResetPasswordRequest"
+                "$ref": "#/components/schemas/ResetPasswordByIdRequest"
               }
             }
           },
@@ -1513,16 +1581,11 @@
         ],
         "title": "ResendOTP"
       },
-      "ResetPasswordRequest": {
+      "ResetPasswordByIdRequest": {
         "properties": {
-          "email": {
-            "type": "string",
-            "format": "email",
-            "title": "Email"
-          },
-          "code": {
-            "type": "string",
-            "title": "Code"
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
           },
           "new_password": {
             "type": "string",
@@ -1531,11 +1594,10 @@
         },
         "type": "object",
         "required": [
-          "email",
-          "code",
+          "user_id",
           "new_password"
         ],
-        "title": "ResetPasswordRequest"
+        "title": "ResetPasswordByIdRequest"
       },
       "StandardResponse_AuthResponseData_": {
         "properties": {
@@ -1831,6 +1893,39 @@
           "message"
         ],
         "title": "StandardResponse[UserMeResponse]"
+      },
+      "StandardResponse_VerifyOTPResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "status": {
+            "type": "integer",
+            "title": "Status"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VerifyOTPResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "status",
+          "message"
+        ],
+        "title": "StandardResponse[VerifyOTPResponse]"
       },
       "StandardResponse_dict_": {
         "properties": {
@@ -2199,6 +2294,38 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VerifyOTPRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "code"
+        ],
+        "title": "VerifyOTPRequest"
+      },
+      "VerifyOTPResponse": {
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id"
+        ],
+        "title": "VerifyOTPResponse"
       }
     },
     "securitySchemes": {

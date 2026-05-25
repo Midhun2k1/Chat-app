@@ -54,12 +54,16 @@ class UserMeResponse(BaseModel):
     is_verified: bool
     avatar_url: Optional[str] = None
 
-
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
-
-class ResetPasswordRequest(BaseModel):
+class VerifyOTPRequest(BaseModel):
     email: EmailStr
     code: str
+
+class VerifyOTPResponse(BaseModel):
+    user_id: int
+
+class ResetPasswordByIdRequest(BaseModel):
+    user_id: int
     new_password: str

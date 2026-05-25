@@ -123,6 +123,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/verify-forgot-password-otp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify Forgot Password Otp */
+        post: operations["verify_forgot_password_otp_verify_forgot_password_otp_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/reset-password": {
         parameters: {
             query?: never;
@@ -494,15 +511,10 @@ export interface components {
              */
             email: string;
         };
-        /** ResetPasswordRequest */
-        ResetPasswordRequest: {
-            /**
-             * Email
-             * Format: email
-             */
-            email: string;
-            /** Code */
-            code: string;
+        /** ResetPasswordByIdRequest */
+        ResetPasswordByIdRequest: {
+            /** User Id */
+            user_id: number;
             /** New Password */
             new_password: string;
         };
@@ -597,6 +609,16 @@ export interface components {
             /** Message */
             message: string;
             data?: components["schemas"]["UserMeResponse"] | null;
+        };
+        /** StandardResponse[VerifyOTPResponse] */
+        StandardResponse_VerifyOTPResponse_: {
+            /** Success */
+            success: boolean;
+            /** Status */
+            status: number;
+            /** Message */
+            message: string;
+            data?: components["schemas"]["VerifyOTPResponse"] | null;
         };
         /** StandardResponse[dict] */
         StandardResponse_dict_: {
@@ -716,6 +738,21 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** VerifyOTPRequest */
+        VerifyOTPRequest: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Code */
+            code: string;
+        };
+        /** VerifyOTPResponse */
+        VerifyOTPResponse: {
+            /** User Id */
+            user_id: number;
         };
     };
     responses: never;
@@ -1133,6 +1170,66 @@ export interface operations {
             };
         };
     };
+    verify_forgot_password_otp_verify_forgot_password_otp_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyOTPRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardResponse_VerifyOTPResponse_"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     reset_password_reset_password_post: {
         parameters: {
             query?: never;
@@ -1142,7 +1239,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ResetPasswordRequest"];
+                "application/json": components["schemas"]["ResetPasswordByIdRequest"];
             };
         };
         responses: {
