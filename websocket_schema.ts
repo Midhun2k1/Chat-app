@@ -59,8 +59,8 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** AckDeleteMessagePayload */
-        AckDeleteMessagePayload: {
+        /** AckDeleteMultipleMessagesItem */
+        AckDeleteMultipleMessagesItem: {
             /** Id */
             id: string;
             /**
@@ -68,6 +68,22 @@ export interface components {
              * @enum {string}
              */
             deleteType: "deleteForMe" | "deleteForEveryone" | "both";
+            /** Deletedforeveryoneat */
+            deletedForEveryoneAt?: string | null;
+            /** Deletedformeat */
+            deletedForMeAt?: string | null;
+            /** Error */
+            error?: string | null;
+        };
+        /** AckDeleteMultipleMessagesPayload */
+        AckDeleteMultipleMessagesPayload: {
+            /**
+             * Protocolversion
+             * @default 1.0
+             */
+            protocolVersion: string;
+            /** Messages */
+            messages: components["schemas"]["AckDeleteMultipleMessagesItem"][];
         };
         /** AckEditMessagePayload */
         AckEditMessagePayload: {
@@ -83,8 +99,8 @@ export interface components {
             /** Servertimestamp */
             serverTimestamp: string;
         };
-        /** DeleteMessagePayload */
-        DeleteMessagePayload: {
+        /** DeleteMultipleMessagesItem */
+        DeleteMultipleMessagesItem: {
             /** Id */
             id: number | string;
             /**
@@ -96,6 +112,16 @@ export interface components {
             deletedForEveryoneAt?: number | string | null;
             /** Deletedformeat */
             deletedForMeAt?: number | string | null;
+        };
+        /** DeleteMultipleMessagesPayload */
+        DeleteMultipleMessagesPayload: {
+            /**
+             * Protocolversion
+             * @default 1.0
+             */
+            protocolVersion: string;
+            /** Messages */
+            messages: components["schemas"]["DeleteMultipleMessagesItem"][];
         };
         /** EditMessagePayload */
         EditMessagePayload: {
@@ -143,8 +169,8 @@ export interface components {
              */
             status: "online" | "offline";
         };
-        /** ReceiveDeleteMessagePayload */
-        ReceiveDeleteMessagePayload: {
+        /** ReceiveDeleteMultipleMessagesItem */
+        ReceiveDeleteMultipleMessagesItem: {
             /** Id */
             id: string;
             /**
@@ -152,6 +178,18 @@ export interface components {
              * @enum {string}
              */
             deleteType: "deleteForEveryone" | "both";
+            /** Deletedforeveryoneat */
+            deletedForEveryoneAt: string;
+        };
+        /** ReceiveDeleteMultipleMessagesPayload */
+        ReceiveDeleteMultipleMessagesPayload: {
+            /**
+             * Protocolversion
+             * @default 1.0
+             */
+            protocolVersion: string;
+            /** Messages */
+            messages: components["schemas"]["ReceiveDeleteMultipleMessagesItem"][];
         };
         /** ReceiveEditMessagePayload */
         ReceiveEditMessagePayload: {
@@ -210,9 +248,9 @@ export interface components {
              * Event
              * @enum {string}
              */
-            event: "SEND_MSG" | "TYPING" | "MSG_STATUS" | "PRESENCE" | "EDIT_MSG" | "DELETE_MSG";
+            event: "SEND_MSG" | "TYPING" | "MSG_STATUS" | "PRESENCE" | "EDIT_MSG" | "DELETE_MSGS";
             /** Payload */
-            payload: components["schemas"]["SendMessagePayload"] | components["schemas"]["TypingPayload"] | components["schemas"]["MessageStatusPayload"] | components["schemas"]["PresencePayload"] | components["schemas"]["EditMessagePayload"] | components["schemas"]["DeleteMessagePayload"];
+            payload: components["schemas"]["SendMessagePayload"] | components["schemas"]["TypingPayload"] | components["schemas"]["MessageStatusPayload"] | components["schemas"]["PresencePayload"] | components["schemas"]["EditMessagePayload"] | components["schemas"]["DeleteMultipleMessagesPayload"];
             /** Timestamp */
             timestamp?: number | string | null;
         };
@@ -222,9 +260,9 @@ export interface components {
              * Event
              * @enum {string}
              */
-            event: "ACK_SEND_MSG" | "RECEIVE_MSG" | "TYPING" | "MSG_STATUS" | "PRESENCE" | "ACK_EDIT_MSG" | "RECEIVE_EDIT_MSG" | "ACK_DELETE_MSG" | "RECEIVE_DELETE_MSG" | "ERROR";
+            event: "ACK_SEND_MSG" | "RECEIVE_MSG" | "TYPING" | "MSG_STATUS" | "PRESENCE" | "ACK_EDIT_MSG" | "RECEIVE_EDIT_MSG" | "ACK_DELETE_MSGS" | "RECEIVE_DELETE_MSGS" | "ERROR";
             /** Payload */
-            payload: components["schemas"]["AckSendMessagePayload"] | components["schemas"]["ReceiveMessagePayload"] | components["schemas"]["TypingBroadcastPayload"] | components["schemas"]["MessageStatusBroadcastPayload"] | components["schemas"]["PresenceBroadcastPayload"] | components["schemas"]["AckEditMessagePayload"] | components["schemas"]["ReceiveEditMessagePayload"] | components["schemas"]["AckDeleteMessagePayload"] | components["schemas"]["ReceiveDeleteMessagePayload"] | components["schemas"]["ErrorPayload"];
+            payload: components["schemas"]["AckSendMessagePayload"] | components["schemas"]["ReceiveMessagePayload"] | components["schemas"]["TypingBroadcastPayload"] | components["schemas"]["MessageStatusBroadcastPayload"] | components["schemas"]["PresenceBroadcastPayload"] | components["schemas"]["AckEditMessagePayload"] | components["schemas"]["ReceiveEditMessagePayload"] | components["schemas"]["AckDeleteMultipleMessagesPayload"] | components["schemas"]["ReceiveDeleteMultipleMessagesPayload"] | components["schemas"]["ErrorPayload"];
             /** Timestamp */
             timestamp: string;
         };

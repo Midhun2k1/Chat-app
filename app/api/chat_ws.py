@@ -7,7 +7,7 @@ from app.websocket.handlers import (
     handle_message_status,
     handle_presence,
     handle_edit_message,
-    handle_delete_message
+    handle_delete_messages
 )
 from app.db.database import SessionLocal
 from app.auth.auth import SECRET_KEY, ALGORITHM
@@ -51,7 +51,8 @@ async def websocket_endpoint(websocket: WebSocket):
 
             from app.schemas.websocket import (
                 SendMessagePayload, TypingPayload, MessageStatusPayload, 
-                PresencePayload, EditMessagePayload, DeleteMessagePayload
+                PresencePayload, EditMessagePayload,
+                DeleteMultipleMessagesPayload
             )
 
             if isinstance(payload, SendMessagePayload):
@@ -64,8 +65,8 @@ async def websocket_endpoint(websocket: WebSocket):
                 await handle_presence(user_id, payload)
             elif isinstance(payload, EditMessagePayload):
                 await handle_edit_message(user_id, payload, db)
-            elif isinstance(payload, DeleteMessagePayload):
-                await handle_delete_message(user_id, payload, db)
+            elif isinstance(payload, DeleteMultipleMessagesPayload):
+                await handle_delete_messages(user_id, payload, db)
 
     except WebSocketDisconnect:
         manager.disconnect(user_id, websocket)  # ✅ FIXED

@@ -47,7 +47,7 @@
   },
   "components": {
     "schemas": {
-      "DeleteMessagePayload": {
+      "DeleteMultipleMessagesItem": {
         "properties": {
           "id": {
             "anyOf": [
@@ -104,7 +104,28 @@
           "id",
           "deleteType"
         ],
-        "title": "DeleteMessagePayload",
+        "title": "DeleteMultipleMessagesItem",
+        "type": "object"
+      },
+      "DeleteMultipleMessagesPayload": {
+        "properties": {
+          "protocolVersion": {
+            "default": "1.0",
+            "title": "Protocolversion",
+            "type": "string"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/DeleteMultipleMessagesItem"
+            },
+            "title": "Messages",
+            "type": "array"
+          }
+        },
+        "required": [
+          "messages"
+        ],
+        "title": "DeleteMultipleMessagesPayload",
         "type": "object"
       },
       "EditMessagePayload": {
@@ -241,7 +262,7 @@
         "title": "TypingPayload",
         "type": "object"
       },
-      "AckDeleteMessagePayload": {
+      "AckDeleteMultipleMessagesItem": {
         "properties": {
           "id": {
             "title": "Id",
@@ -255,13 +276,70 @@
             ],
             "title": "Deletetype",
             "type": "string"
+          },
+          "deletedForEveryoneAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Deletedforeveryoneat"
+          },
+          "deletedForMeAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Deletedformeat"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Error"
           }
         },
         "required": [
           "id",
           "deleteType"
         ],
-        "title": "AckDeleteMessagePayload",
+        "title": "AckDeleteMultipleMessagesItem",
+        "type": "object"
+      },
+      "AckDeleteMultipleMessagesPayload": {
+        "properties": {
+          "protocolVersion": {
+            "default": "1.0",
+            "title": "Protocolversion",
+            "type": "string"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/AckDeleteMultipleMessagesItem"
+            },
+            "title": "Messages",
+            "type": "array"
+          }
+        },
+        "required": [
+          "messages"
+        ],
+        "title": "AckDeleteMultipleMessagesPayload",
         "type": "object"
       },
       "AckEditMessagePayload": {
@@ -349,7 +427,7 @@
         "title": "PresenceBroadcastPayload",
         "type": "object"
       },
-      "ReceiveDeleteMessagePayload": {
+      "ReceiveDeleteMultipleMessagesItem": {
         "properties": {
           "id": {
             "title": "Id",
@@ -362,13 +440,39 @@
             ],
             "title": "Deletetype",
             "type": "string"
+          },
+          "deletedForEveryoneAt": {
+            "title": "Deletedforeveryoneat",
+            "type": "string"
           }
         },
         "required": [
           "id",
-          "deleteType"
+          "deleteType",
+          "deletedForEveryoneAt"
         ],
-        "title": "ReceiveDeleteMessagePayload",
+        "title": "ReceiveDeleteMultipleMessagesItem",
+        "type": "object"
+      },
+      "ReceiveDeleteMultipleMessagesPayload": {
+        "properties": {
+          "protocolVersion": {
+            "default": "1.0",
+            "title": "Protocolversion",
+            "type": "string"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/ReceiveDeleteMultipleMessagesItem"
+            },
+            "title": "Messages",
+            "type": "array"
+          }
+        },
+        "required": [
+          "messages"
+        ],
+        "title": "ReceiveDeleteMultipleMessagesPayload",
         "type": "object"
       },
       "ReceiveEditMessagePayload": {
@@ -476,7 +580,7 @@
               "MSG_STATUS",
               "PRESENCE",
               "EDIT_MSG",
-              "DELETE_MSG"
+              "DELETE_MSGS"
             ],
             "title": "Event",
             "type": "string"
@@ -499,7 +603,7 @@
                 "$ref": "#/components/schemas/EditMessagePayload"
               },
               {
-                "$ref": "#/components/schemas/DeleteMessagePayload"
+                "$ref": "#/components/schemas/DeleteMultipleMessagesPayload"
               }
             ],
             "title": "Payload"
@@ -538,8 +642,8 @@
               "PRESENCE",
               "ACK_EDIT_MSG",
               "RECEIVE_EDIT_MSG",
-              "ACK_DELETE_MSG",
-              "RECEIVE_DELETE_MSG",
+              "ACK_DELETE_MSGS",
+              "RECEIVE_DELETE_MSGS",
               "ERROR"
             ],
             "title": "Event",
@@ -569,10 +673,10 @@
                 "$ref": "#/components/schemas/ReceiveEditMessagePayload"
               },
               {
-                "$ref": "#/components/schemas/AckDeleteMessagePayload"
+                "$ref": "#/components/schemas/AckDeleteMultipleMessagesPayload"
               },
               {
-                "$ref": "#/components/schemas/ReceiveDeleteMessagePayload"
+                "$ref": "#/components/schemas/ReceiveDeleteMultipleMessagesPayload"
               },
               {
                 "$ref": "#/components/schemas/ErrorPayload"

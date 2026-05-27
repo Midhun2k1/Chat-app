@@ -24,23 +24,27 @@ class EditMessagePayload(BaseModel):
     text: str
     editedAt: Optional[Union[int, str]] = None
 
-class DeleteMessagePayload(BaseModel):
+class DeleteMultipleMessagesItem(BaseModel):
     id: Union[int, str]
     deleteType: Literal["deleteForMe", "deleteForEveryone", "both"]
     deletedForEveryoneAt: Optional[Union[int, str]] = None
     deletedForMeAt: Optional[Union[int, str]] = None
 
+class DeleteMultipleMessagesPayload(BaseModel):
+    protocolVersion: str = "1.0"
+    messages: List[DeleteMultipleMessagesItem]
+
 # --- Incoming Message Wrapper ---
 
 class WsClientMessage(BaseModel):
-    event: Literal["SEND_MSG", "TYPING", "MSG_STATUS", "PRESENCE", "EDIT_MSG", "DELETE_MSG"]
+    event: Literal["SEND_MSG", "TYPING", "MSG_STATUS", "PRESENCE", "EDIT_MSG", "DELETE_MSGS"]
     payload: Union[
         SendMessagePayload,
         TypingPayload,
         MessageStatusPayload,
         PresencePayload,
         EditMessagePayload,
-        DeleteMessagePayload
+        DeleteMultipleMessagesPayload
     ]
     timestamp: Optional[Union[int, str]] = None
 
@@ -81,13 +85,25 @@ class ReceiveEditMessagePayload(BaseModel):
     text: str
     editedAt: Optional[str] = None
 
-class AckDeleteMessagePayload(BaseModel):
+class AckDeleteMultipleMessagesItem(BaseModel):
     id: str
     deleteType: Literal["deleteForMe", "deleteForEveryone", "both"]
+    deletedForEveryoneAt: Optional[str] = None
+    deletedForMeAt: Optional[str] = None
+    error: Optional[str] = None
 
-class ReceiveDeleteMessagePayload(BaseModel):
+class AckDeleteMultipleMessagesPayload(BaseModel):
+    protocolVersion: str = "1.0"
+    messages: List[AckDeleteMultipleMessagesItem]
+
+class ReceiveDeleteMultipleMessagesItem(BaseModel):
     id: str
-    deleteType: Literal["deleteForEveryone", "both"] # deleteForMe is not broadcast
+    deleteType: Literal["deleteForEveryone", "both"]
+    deletedForEveryoneAt: str
+
+class ReceiveDeleteMultipleMessagesPayload(BaseModel):
+    protocolVersion: str = "1.0"
+    messages: List[ReceiveDeleteMultipleMessagesItem]
 
 class ErrorPayload(BaseModel):
     message: str
@@ -103,8 +119,8 @@ class WsServerMessage(BaseModel):
         "PRESENCE", 
         "ACK_EDIT_MSG", 
         "RECEIVE_EDIT_MSG", 
-        "ACK_DELETE_MSG", 
-        "RECEIVE_DELETE_MSG", 
+        "ACK_DELETE_MSGS",
+        "RECEIVE_DELETE_MSGS",
         "ERROR"
     ]
     payload: Union[
@@ -115,8 +131,8 @@ class WsServerMessage(BaseModel):
         PresenceBroadcastPayload,
         AckEditMessagePayload,
         ReceiveEditMessagePayload,
-        AckDeleteMessagePayload,
-        ReceiveDeleteMessagePayload,
+        AckDeleteMultipleMessagesPayload,
+        ReceiveDeleteMultipleMessagesPayload,
         ErrorPayload
     ]
     timestamp: str

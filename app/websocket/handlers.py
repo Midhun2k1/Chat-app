@@ -5,11 +5,13 @@ from app.db.models import Message, ConversationParticipant, MessageDelete
 from app.utils.time_utils import format_datetime_to_zulu
 from app.schemas.websocket import (
     SendMessagePayload, TypingPayload, MessageStatusPayload, PresencePayload,
-    EditMessagePayload, DeleteMessagePayload, WsServerMessage,
+    EditMessagePayload, WsServerMessage,
     AckSendMessagePayload, ReceiveMessagePayload, TypingBroadcastPayload,
     MessageStatusBroadcastPayload, PresenceBroadcastPayload,
     AckEditMessagePayload, ReceiveEditMessagePayload,
-    AckDeleteMessagePayload, ReceiveDeleteMessagePayload, ErrorPayload
+    ErrorPayload,
+    DeleteMultipleMessagesPayload, AckDeleteMultipleMessagesPayload, AckDeleteMultipleMessagesItem,
+    ReceiveDeleteMultipleMessagesPayload, ReceiveDeleteMultipleMessagesItem
 )
 
 
@@ -246,107 +248,150 @@ async def handle_edit_message(user_id: int, payload: EditMessagePayload, db: Ses
 
 
 
-# DELETE MESSAGE
-async def handle_delete_message(user_id: int, payload: DeleteMessagePayload, db: Session):
+# DELETE MULTIPLE MESSAGES
+async def handle_delete_messages(user_id: int, payload: DeleteMultipleMessagesPayload, db: Session):
     try:
-        message_id = payload.id
-        delete_type = payload.deleteType
-        deleted_at_for_everyone = payload.deletedForEveryoneAt
-        deleted_at_for_me = payload.deletedForMeAt
-        message = db.query(Message).filter(
-            Message.client_message_id == message_id
-        ).first()
-
-        if not message:
-            return
-
         server_timestamp = format_datetime_to_zulu(datetime.now(timezone.utc))
+        ack_items = []
+        broadcast_by_conv = {}
 
-        if delete_type == "deleteForEveryone":
-            if message.fld_sender_id != user_id:
-                error_msg = WsServerMessage(
-                    event="ERROR",
-                    payload=ErrorPayload(message="You can only delete your own messages for everyone."),
-                    timestamp=server_timestamp
+        for msg_item in payload.messages:
+            message_id = msg_item.id
+            delete_type = msg_item.deleteType
+            deleted_at_for_everyone = msg_item.deletedForEveryoneAt
+            deleted_at_for_me = msg_item.deletedForMeAt
+
+            message = db.query(Message).filter(
+                Message.client_message_id == message_id
+            ).first()
+
+            if not message:
+                ack_items.append(
+                    AckDeleteMultipleMessagesItem(
+                        id=str(message_id),
+                        deleteType=delete_type,
+                        deletedForEveryoneAt=deleted_at_for_everyone,
+                        deletedForMeAt=deleted_at_for_me,
+                        error="INVALID_ID"
+                    )
                 )
-                sender_sockets = manager.active_connections.get(user_id, [])
-                for ws in sender_sockets:
-                    await ws.send_json(error_msg.model_dump())
-                return
+                continue
 
-            message.fld_is_deleted_for_everyone = True
-            message.deleted_for_everyone_at = deleted_at_for_everyone
-            db.commit()
+            # Authorization Check
+            if delete_type in ("deleteForEveryone", "both"):
+                if message.fld_sender_id != user_id:
+                    ack_items.append(
+                        AckDeleteMultipleMessagesItem(
+                            id=str(message_id),
+                            deleteType=delete_type,
+                            deletedForEveryoneAt=deleted_at_for_everyone,
+                            deletedForMeAt=deleted_at_for_me,
+                            error="PERMISSION_DENIED"
+                        )
+                    )
+                    continue
 
-        elif delete_type == "deleteForMe":
-            new_delete = MessageDelete(
-                message_id=message.fld_message_id,
-                user_id=user_id,
-                deleted_at=deleted_at_for_me
-            )
-            db.add(new_delete)
-            db.commit()
+            # Process Deletion logic
+            try:
+                if delete_type == "deleteForEveryone":
+                    message.fld_is_deleted_for_everyone = True
+                    message.deleted_for_everyone_at = deleted_at_for_everyone or server_timestamp
+                    db.commit()
+                elif delete_type == "deleteForMe":
+                    new_delete = MessageDelete(
+                        message_id=message.fld_message_id,
+                        user_id=user_id,
+                        deleted_at=deleted_at_for_me or server_timestamp
+                    )
+                    db.add(new_delete)
+                    db.commit()
+                elif delete_type == "both":
+                    message.fld_is_deleted_for_everyone = True
+                    message.deleted_for_everyone_at = deleted_at_for_everyone or server_timestamp
+                    new_delete = MessageDelete(
+                        message_id=message.fld_message_id,
+                        user_id=user_id,
+                        deleted_at=deleted_at_for_me or server_timestamp
+                    )
+                    db.add(new_delete)
+                    db.commit()
 
-        elif delete_type == "both":
-            # Delete for everyone
-            if message.fld_sender_id != user_id:
-                error_msg = WsServerMessage(
-                    event="ERROR",
-                    payload=ErrorPayload(message="You can only delete your own messages for everyone."),
-                    timestamp=server_timestamp
+                # Add to ack payload
+                ack_items.append(
+                    AckDeleteMultipleMessagesItem(
+                        id=str(message_id),
+                        deleteType=delete_type,
+                        deletedForEveryoneAt=deleted_at_for_everyone or server_timestamp if delete_type in ("deleteForEveryone", "both") else None,
+                        deletedForMeAt=deleted_at_for_me or server_timestamp if delete_type in ("deleteForMe", "both") else None
+                    )
                 )
-                sender_sockets = manager.active_connections.get(user_id, [])
-                for ws in sender_sockets:
-                    await ws.send_json(error_msg.model_dump())
-                return
-            message.fld_is_deleted_for_everyone = True
-            message.deleted_for_everyone_at = deleted_at_for_everyone
-            # Delete for me
-            new_delete = MessageDelete(
-                message_id=message.fld_message_id,
-                user_id=user_id,
-                deleted_at=deleted_at_for_me
-            )
-            db.add(new_delete)
-            db.commit()
 
-        # ACK sender
+                # Collect broadcast items
+                if delete_type in ("deleteForEveryone", "both"):
+                    conv_id = message.fld_conversation_id
+                    if conv_id not in broadcast_by_conv:
+                        broadcast_by_conv[conv_id] = []
+                    
+                    broadcast_by_conv[conv_id].append(
+                        ReceiveDeleteMultipleMessagesItem(
+                            id=str(message_id),
+                            deleteType=delete_type,
+                            deletedForEveryoneAt=deleted_at_for_everyone or server_timestamp
+                        )
+                    )
+
+            except Exception as item_err:
+                db.rollback()
+                ack_items.append(
+                    AckDeleteMultipleMessagesItem(
+                        id=str(message_id),
+                        deleteType=delete_type,
+                        deletedForEveryoneAt=deleted_at_for_everyone,
+                        deletedForMeAt=deleted_at_for_me,
+                        error=f"ERROR: {str(item_err)}"
+                    )
+                )
+
+        # Send ACK back to the sender
+        ack_payload = AckDeleteMultipleMessagesPayload(
+            protocolVersion=payload.protocolVersion,
+            messages=ack_items
+        )
         ack_msg = WsServerMessage(
-            event="ACK_DELETE_MSG",
-            payload=AckDeleteMessagePayload(
-                id=str(message_id),
-                deleteType=delete_type
-            ),
+            event="ACK_DELETE_MSGS",
+            payload=ack_payload,
             timestamp=server_timestamp
         )
         sender_sockets = manager.active_connections.get(user_id, [])
         for ws in sender_sockets:
             await ws.send_json(ack_msg.model_dump())
 
-        # Broadcast delete ONLY for 'deleteForEveryone' and 'both'
-        if delete_type in ("deleteForEveryone", "both"):
-            receive_delete_msg = WsServerMessage(
-                event="RECEIVE_DELETE_MSG",
-                payload=ReceiveDeleteMessagePayload(
-                    id=str(message_id),
-                    deleteType=delete_type
-                ),
+        # Broadcast RECEIVE_DELETE_MSGS per conversation
+        for conv_id, items in broadcast_by_conv.items():
+            if not items:
+                continue
+
+            broadcast_payload = ReceiveDeleteMultipleMessagesPayload(
+                protocolVersion=payload.protocolVersion,
+                messages=items
+            )
+            receive_msg = WsServerMessage(
+                event="RECEIVE_DELETE_MSGS",
+                payload=broadcast_payload,
                 timestamp=server_timestamp
             )
 
-            # Get participants of this conversation
             participants = db.query(ConversationParticipant).filter(
-                ConversationParticipant.fld_conversation_id == message.fld_conversation_id
+                ConversationParticipant.fld_conversation_id == conv_id
             ).all()
             unique_participant_ids = {p.fld_user_id for p in participants}
 
             for target_uid in unique_participant_ids:
-                if target_uid == user_id: # Skip the sender
+                if target_uid == user_id:
                     continue
-
                 target_sockets = manager.active_connections.get(target_uid, [])
                 for ws in target_sockets:
-                    await ws.send_json(receive_delete_msg.model_dump())
+                    await ws.send_json(receive_msg.model_dump())
 
     except Exception as e:
-        print("DELETE_MSG ERROR:", e)
+        print("DELETE_MSGS ERROR:", e)

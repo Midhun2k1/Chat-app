@@ -12,7 +12,7 @@ from app.schemas.websocket import (
     MessageStatusPayload,
     PresencePayload,
     EditMessagePayload,
-    DeleteMessagePayload,
+    DeleteMultipleMessagesPayload,
     AckSendMessagePayload,
     ReceiveMessagePayload,
     TypingBroadcastPayload,
@@ -20,8 +20,8 @@ from app.schemas.websocket import (
     PresenceBroadcastPayload,
     AckEditMessagePayload,
     ReceiveEditMessagePayload,
-    AckDeleteMessagePayload,
-    ReceiveDeleteMessagePayload,
+    AckDeleteMultipleMessagesPayload,
+    ReceiveDeleteMultipleMessagesPayload,
     ErrorPayload
 )
 
