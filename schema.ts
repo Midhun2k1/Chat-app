@@ -492,21 +492,13 @@ export interface components {
             is_deleted_for_everyone: boolean;
             /** Is Delete For Me */
             is_delete_for_me: boolean;
-            reply_to?: components["schemas"]["ParentMessageItem"] | null;
+            /** Reply To */
+            reply_to?: string | null;
         };
         /** MessageList */
         MessageList: {
             /** Messages */
             messages: components["schemas"]["MessageItem"][];
-        };
-        /** ParentMessageItem */
-        ParentMessageItem: {
-            /** Message Id */
-            message_id: string;
-            /** Sender Id */
-            sender_id: number;
-            /** Message */
-            message: string;
         };
         /** RefreshTokenRequest */
         RefreshTokenRequest: {

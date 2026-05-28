@@ -154,15 +154,6 @@ export interface components {
              */
             status: "read" | "delivered";
         };
-        /** ParentMessageInfo */
-        ParentMessageInfo: {
-            /** Id */
-            id: string;
-            /** Text */
-            text: string;
-            /** Senderid */
-            senderId: string;
-        };
         /** PresenceBroadcastPayload */
         PresenceBroadcastPayload: {
             /** Userid */
@@ -225,7 +216,8 @@ export interface components {
             serverTimestamp: string;
             /** Isdeletedforeveryone */
             isDeletedForEveryone: boolean;
-            replyTo?: components["schemas"]["ParentMessageInfo"] | null;
+            /** Replyto */
+            replyTo?: string | null;
         };
         /** SendMessagePayload */
         SendMessagePayload: {
@@ -235,8 +227,8 @@ export interface components {
             text: string;
             /** Id */
             id: number | string;
-            /** Parentmessageid */
-            parentMessageId?: string | null;
+            /** Replyto */
+            replyTo?: string | null;
         };
         /** TypingBroadcastPayload */
         TypingBroadcastPayload: {

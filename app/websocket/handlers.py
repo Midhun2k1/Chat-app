@@ -12,7 +12,7 @@ from app.schemas.websocket import (
     ErrorPayload,
     DeleteMultipleMessagesPayload, AckDeleteMultipleMessagesPayload, AckDeleteMultipleMessagesItem,
     ReceiveDeleteMultipleMessagesPayload, ReceiveDeleteMultipleMessagesItem,
-    ParentMessageInfo
+
 )
 
 
@@ -23,7 +23,7 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
         conversation_id = payload.chatId
         text = payload.text
         client_msg_id = payload.id
-        parent_msg_id = payload.parentMessageId
+        parent_msg_id = payload.replyTo
 
         new_message = Message(
             fld_conversation_id=conversation_id,
@@ -60,15 +60,9 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
         # Ensure we only send to unique users to avoid duplicates
         unique_participant_ids = {p.fld_user_id for p in participants}
 
-        reply_to_info = None
+        parent_msg = None
         if parent_msg_id:
             parent_msg = db.query(Message).filter(Message.client_message_id == parent_msg_id).first()
-            if parent_msg:
-                reply_to_info = ParentMessageInfo(
-                    id=parent_msg.client_message_id,
-                    text=parent_msg.fld_message,
-                    senderId=str(parent_msg.fld_sender_id)
-                )
 
         # Construct Broadcast message
         receive_msg = WsServerMessage(
@@ -81,7 +75,7 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
                 createdAt=format_datetime_to_zulu(new_message.fld_created_at),
                 serverTimestamp=server_timestamp,
                 isDeletedForEveryone=new_message.fld_is_deleted_for_everyone,
-                replyTo=reply_to_info
+                replyTo=parent_msg.client_message_id if parent_msg else None
             ),
             timestamp=server_timestamp
         )

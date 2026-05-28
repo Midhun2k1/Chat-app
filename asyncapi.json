@@ -235,7 +235,7 @@
             ],
             "title": "Id"
           },
-          "parentMessageId": {
+          "replyTo": {
             "anyOf": [
               {
                 "type": "string"
@@ -245,7 +245,7 @@
               }
             ],
             "default": null,
-            "title": "Parentmessageid"
+            "title": "Replyto"
           }
         },
         "required": [
@@ -421,29 +421,6 @@
         "title": "MessageStatusBroadcastPayload",
         "type": "object"
       },
-      "ParentMessageInfo": {
-        "properties": {
-          "id": {
-            "title": "Id",
-            "type": "string"
-          },
-          "text": {
-            "title": "Text",
-            "type": "string"
-          },
-          "senderId": {
-            "title": "Senderid",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "text",
-          "senderId"
-        ],
-        "title": "ParentMessageInfo",
-        "type": "object"
-      },
       "PresenceBroadcastPayload": {
         "properties": {
           "userId": {
@@ -573,13 +550,14 @@
           "replyTo": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/ParentMessageInfo"
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "default": null
+            "default": null,
+            "title": "Replyto"
           }
         },
         "required": [

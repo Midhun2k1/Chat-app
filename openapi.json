@@ -1528,12 +1528,13 @@
           "reply_to": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/ParentMessageItem"
+                "type": "string"
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "title": "Reply To"
           }
         },
         "type": "object",
@@ -1563,29 +1564,6 @@
           "messages"
         ],
         "title": "MessageList"
-      },
-      "ParentMessageItem": {
-        "properties": {
-          "message_id": {
-            "type": "string",
-            "title": "Message Id"
-          },
-          "sender_id": {
-            "type": "integer",
-            "title": "Sender Id"
-          },
-          "message": {
-            "type": "string",
-            "title": "Message"
-          }
-        },
-        "type": "object",
-        "required": [
-          "message_id",
-          "sender_id",
-          "message"
-        ],
-        "title": "ParentMessageItem"
       },
       "RefreshTokenRequest": {
         "properties": {

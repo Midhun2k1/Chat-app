@@ -1,10 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
 
-class ParentMessageItem(BaseModel):
-    message_id: str
-    sender_id: int
-    message: str
 
 class MessageItem(BaseModel):
     message_id: str
@@ -14,7 +10,7 @@ class MessageItem(BaseModel):
     is_read: bool
     is_deleted_for_everyone: bool
     is_delete_for_me: bool
-    reply_to: Optional[ParentMessageItem] = None
+    reply_to: Optional[str] = None
 
 
 class MessageList(BaseModel):
