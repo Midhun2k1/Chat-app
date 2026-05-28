@@ -358,6 +358,14 @@ export interface components {
             user_id: number;
             /** Is Verified */
             is_verified: boolean;
+            /** Username */
+            username: string;
+            /** Email */
+            email: string;
+            /** Avatar Url */
+            avatar_url?: string | null;
+            /** Full Name */
+            full_name: string;
         };
         /** Body_upload_avatar_users_avatar_post */
         Body_upload_avatar_users_avatar_post: {
@@ -689,6 +697,8 @@ export interface components {
             is_verified: boolean;
             /** Avatar Url */
             avatar_url?: string | null;
+            /** Full Name */
+            full_name: string;
         };
         /** UserRegister */
         UserRegister: {

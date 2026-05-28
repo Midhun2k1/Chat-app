@@ -99,7 +99,11 @@ def user_login(user: UserLogin, db: Session = Depends(get_db)):
             "access_token": access_token,
             "refresh_token": refresh_token,
             "user_id": db_user.fld_user_id,
-            "is_verified": db_user.fld_is_verified
+            "is_verified": db_user.fld_is_verified,
+            "username": db_user.fld_username,
+            "email": db_user.fld_email,
+            "avatar_url": db_user.fld_avatar_url,
+            "full_name": f"{db_user.fld_firstname} {db_user.fld_lastname}"
         }
         return {
             "success": True,
@@ -219,7 +223,8 @@ def get_me(current_user: User = Depends(get_current_user)):
         "username": current_user.fld_username,
         "email": current_user.fld_email,
         "is_verified": current_user.fld_is_verified,
-        "avatar_url": current_user.fld_avatar_url
+        "avatar_url": current_user.fld_avatar_url,
+        "full_name": f"{current_user.fld_firstname} {current_user.fld_lastname}"
     }
     return {
         "success": True,

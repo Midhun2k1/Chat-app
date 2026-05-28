@@ -46,6 +46,10 @@ class AuthResponseData(BaseModel):
     refresh_token: str
     user_id: int
     is_verified: bool
+    username: str
+    email: str
+    avatar_url: Optional[str] = None
+    full_name: str
 
 class UserMeResponse(BaseModel):
     user_id: int
@@ -53,6 +57,7 @@ class UserMeResponse(BaseModel):
     email: str
     is_verified: bool
     avatar_url: Optional[str] = None
+    full_name: str
 
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr

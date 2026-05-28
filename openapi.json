@@ -1183,6 +1183,29 @@
           "is_verified": {
             "type": "boolean",
             "title": "Is Verified"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
           }
         },
         "type": "object",
@@ -1190,7 +1213,10 @@
           "access_token",
           "refresh_token",
           "user_id",
-          "is_verified"
+          "is_verified",
+          "username",
+          "email",
+          "full_name"
         ],
         "title": "AuthResponseData"
       },
@@ -2147,6 +2173,10 @@
               }
             ],
             "title": "Avatar Url"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
           }
         },
         "type": "object",
@@ -2154,7 +2184,8 @@
           "user_id",
           "username",
           "email",
-          "is_verified"
+          "is_verified",
+          "full_name"
         ],
         "title": "UserMeResponse"
       },
