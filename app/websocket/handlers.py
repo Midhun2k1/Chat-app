@@ -11,7 +11,8 @@ from app.schemas.websocket import (
     AckEditMessagePayload, ReceiveEditMessagePayload,
     ErrorPayload,
     DeleteMultipleMessagesPayload, AckDeleteMultipleMessagesPayload, AckDeleteMultipleMessagesItem,
-    ReceiveDeleteMultipleMessagesPayload, ReceiveDeleteMultipleMessagesItem
+    ReceiveDeleteMultipleMessagesPayload, ReceiveDeleteMultipleMessagesItem,
+    ParentMessageInfo
 )
 
 
@@ -22,6 +23,7 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
         conversation_id = payload.chatId
         text = payload.text
         client_msg_id = payload.id
+        parent_msg_id = payload.parentMessageId
 
         new_message = Message(
             fld_conversation_id=conversation_id,
@@ -29,7 +31,8 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
             fld_message=text,
             fld_created_at=datetime.now(timezone.utc),
             fld_is_read=False,
-            client_message_id=client_msg_id
+            client_message_id=client_msg_id,
+            parent_message_id=parent_msg_id
         )
 
         db.add(new_message)
@@ -57,6 +60,16 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
         # Ensure we only send to unique users to avoid duplicates
         unique_participant_ids = {p.fld_user_id for p in participants}
 
+        reply_to_info = None
+        if parent_msg_id:
+            parent_msg = db.query(Message).filter(Message.client_message_id == parent_msg_id).first()
+            if parent_msg:
+                reply_to_info = ParentMessageInfo(
+                    id=parent_msg.client_message_id,
+                    text=parent_msg.fld_message,
+                    senderId=str(parent_msg.fld_sender_id)
+                )
+
         # Construct Broadcast message
         receive_msg = WsServerMessage(
             event="RECEIVE_MSG",
@@ -67,7 +80,8 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
                 senderId=str(user_id),
                 createdAt=format_datetime_to_zulu(new_message.fld_created_at),
                 serverTimestamp=server_timestamp,
-                isDeletedForEveryone=new_message.fld_is_deleted_for_everyone
+                isDeletedForEveryone=new_message.fld_is_deleted_for_everyone,
+                replyTo=reply_to_info
             ),
             timestamp=server_timestamp
         )

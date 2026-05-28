@@ -234,6 +234,18 @@
               }
             ],
             "title": "Id"
+          },
+          "parentMessageId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Parentmessageid"
           }
         },
         "required": [
@@ -409,6 +421,29 @@
         "title": "MessageStatusBroadcastPayload",
         "type": "object"
       },
+      "ParentMessageInfo": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "senderId": {
+            "title": "Senderid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "text",
+          "senderId"
+        ],
+        "title": "ParentMessageInfo",
+        "type": "object"
+      },
       "PresenceBroadcastPayload": {
         "properties": {
           "userId": {
@@ -534,6 +569,17 @@
           "isDeletedForEveryone": {
             "title": "Isdeletedforeveryone",
             "type": "boolean"
+          },
+          "replyTo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ParentMessageInfo"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
           }
         },
         "required": [

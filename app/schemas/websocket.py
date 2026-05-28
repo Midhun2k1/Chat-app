@@ -7,6 +7,8 @@ class SendMessagePayload(BaseModel):
     chatId: int
     text: str
     id: Union[int, str]  # client_message_id
+    parentMessageId: Optional[str] = None
+
 
 class TypingPayload(BaseModel):
     chatId: int
@@ -54,6 +56,11 @@ class AckSendMessagePayload(BaseModel):
     id: str
     serverTimestamp: str
 
+class ParentMessageInfo(BaseModel):
+    id: str
+    text: str
+    senderId: str
+
 class ReceiveMessagePayload(BaseModel):
     id: str
     chatId: str
@@ -62,6 +69,8 @@ class ReceiveMessagePayload(BaseModel):
     createdAt: str
     serverTimestamp: str
     isDeletedForEveryone: bool
+    replyTo: Optional[ParentMessageInfo] = None
+
 
 class TypingBroadcastPayload(BaseModel):
     chatId: str

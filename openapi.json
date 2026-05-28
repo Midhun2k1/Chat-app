@@ -1524,6 +1524,16 @@
           "is_delete_for_me": {
             "type": "boolean",
             "title": "Is Delete For Me"
+          },
+          "reply_to": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ParentMessageItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -1553,6 +1563,29 @@
           "messages"
         ],
         "title": "MessageList"
+      },
+      "ParentMessageItem": {
+        "properties": {
+          "message_id": {
+            "type": "string",
+            "title": "Message Id"
+          },
+          "sender_id": {
+            "type": "integer",
+            "title": "Sender Id"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message_id",
+          "sender_id",
+          "message"
+        ],
+        "title": "ParentMessageItem"
       },
       "RefreshTokenRequest": {
         "properties": {

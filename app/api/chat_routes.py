@@ -121,6 +121,13 @@ def get_messages(
         Message.fld_conversation_id == conversation_id
     ).order_by(Message.fld_created_at.desc()).offset(skip).limit(limit).all()
 
+    # Get parent messages for quotes to avoid N+1 queries
+    parent_ids = [msg.parent_message_id for msg in messages if msg.parent_message_id]
+    parent_msgs_dict = {}
+    if parent_ids:
+        parent_msgs = db.query(Message).filter(Message.client_message_id.in_(parent_ids)).all()
+        parent_msgs_dict = {pm.client_message_id: pm for pm in parent_msgs}
+
     # Format messages for the response
     formatted_messages = [
         {
@@ -130,7 +137,12 @@ def get_messages(
             "created_at": format_datetime_to_zulu(msg.fld_created_at),
             "is_read": msg.fld_is_read,
             "is_deleted_for_everyone": msg.fld_is_deleted_for_everyone,
-            "is_delete_for_me": msg.fld_message_id in deleted_ids
+            "is_delete_for_me": msg.fld_message_id in deleted_ids,
+            "reply_to": {
+                "message_id": parent_msgs_dict[msg.parent_message_id].client_message_id,
+                "sender_id": parent_msgs_dict[msg.parent_message_id].fld_sender_id,
+                "message": parent_msgs_dict[msg.parent_message_id].fld_message
+            } if msg.parent_message_id and msg.parent_message_id in parent_msgs_dict else None
         }
         for msg in messages
     ]
