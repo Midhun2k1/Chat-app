@@ -229,6 +229,8 @@ export interface components {
             id: number | string;
             /** Replyto */
             replyTo?: string | null;
+            /** Createdat */
+            createdAt?: number | string | null;
         };
         /** TypingBroadcastPayload */
         TypingBroadcastPayload: {

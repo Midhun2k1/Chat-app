@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
+from .participation import verify_participant
 from app.websocket.manager import manager
 from app.db.models import Message, ConversationParticipant, MessageDelete
-from app.utils.time_utils import format_datetime_to_zulu
+from app.utils.time_utils import format_datetime_to_zulu, parse_datetime
 from app.schemas.websocket import (
     SendMessagePayload, TypingPayload, MessageStatusPayload, PresencePayload,
     EditMessagePayload, WsServerMessage,
@@ -25,11 +26,14 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
         client_msg_id = payload.id
         parent_msg_id = payload.replyTo
 
+        if not await verify_participant(user_id, conversation_id, db):
+            return
+
         new_message = Message(
             fld_conversation_id=conversation_id,
             fld_sender_id=user_id,
             fld_message=text,
-            fld_created_at=datetime.now(timezone.utc),
+            fld_created_at=parse_datetime(payload.createdAt),
             fld_is_read=False,
             client_message_id=client_msg_id,
             parent_message_id=parent_msg_id
@@ -94,10 +98,14 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
 
 
 # TYPING INDICATOR
-async def handle_typing(user_id: int, payload: TypingPayload):
+async def handle_typing(user_id: int, payload: TypingPayload, db: Session):
     try:
         chat_id = payload.chatId
         is_typing = payload.isTyping
+
+        # Verify sender participation
+        if not await verify_participant(user_id, chat_id, db):
+            return
 
         server_timestamp = format_datetime_to_zulu(datetime.now(timezone.utc))
         typing_msg = WsServerMessage(
@@ -129,6 +137,10 @@ async def handle_message_status(user_id: int, payload: MessageStatusPayload, db:
         if status == "read":
             target_message = db.query(Message).filter(Message.client_message_id == message_id).first()
 
+            # Verify participant involvement
+            if target_message and not await verify_participant(user_id, target_message.fld_conversation_id, db):
+                return
+
             if target_message:
                 db.query(Message).filter(
                     Message.fld_conversation_id == target_message.fld_conversation_id,
@@ -149,9 +161,10 @@ async def handle_message_status(user_id: int, payload: MessageStatusPayload, db:
             timestamp=server_timestamp
         )
 
-        for sockets in manager.active_connections.values():
-            for ws in sockets:
-                await ws.send_json(status_msg.model_dump())
+        for uid, sockets in manager.active_connections.items():
+            if uid != user_id:
+                for ws in sockets:
+                    await ws.send_json(status_msg.model_dump())
 
     except Exception as e:
         print("MSG_STATUS ERROR:", e)
@@ -196,6 +209,9 @@ async def handle_edit_message(user_id: int, payload: EditMessagePayload, db: Ses
         ).first()
 
         if not message:
+            return
+        # Verify participant involvement in the conversation
+        if not await verify_participant(user_id, message.fld_conversation_id, db):
             return
 
         # Construction server timestamp
@@ -252,6 +268,8 @@ async def handle_edit_message(user_id: int, payload: EditMessagePayload, db: Ses
                 await ws.send_json(receive_edit_msg.model_dump())
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         print("EDIT_MSG ERROR:", e)
 
 
@@ -272,6 +290,20 @@ async def handle_delete_messages(user_id: int, payload: DeleteMultipleMessagesPa
             message = db.query(Message).filter(
                 Message.client_message_id == message_id
             ).first()
+
+            # Verify participant involvement
+            if message and not await verify_participant(user_id, message.fld_conversation_id, db):
+                # Append error for permission denied due to not participant
+                ack_items.append(
+                    AckDeleteMultipleMessagesItem(
+                        id=str(message_id),
+                        deleteType=delete_type,
+                        deletedForEveryoneAt=deleted_at_for_everyone,
+                        deletedForMeAt=deleted_at_for_me,
+                        error="PERMISSION_DENIED"
+                    )
+                )
+                continue
 
             if not message:
                 ack_items.append(

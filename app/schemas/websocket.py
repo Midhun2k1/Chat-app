@@ -8,6 +8,7 @@ class SendMessagePayload(BaseModel):
     text: str
     id: Union[int, str]  # client_message_id
     replyTo: Optional[str] = None
+    createdAt: Optional[Union[int, float, str]] = None
 
 
 

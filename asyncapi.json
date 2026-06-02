@@ -246,6 +246,24 @@
             ],
             "default": null,
             "title": "Replyto"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Createdat"
           }
         },
         "required": [

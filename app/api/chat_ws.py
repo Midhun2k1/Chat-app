@@ -58,7 +58,7 @@ async def websocket_endpoint(websocket: WebSocket):
             if isinstance(payload, SendMessagePayload):
                 await handle_send_message(user_id, payload, db)
             elif isinstance(payload, TypingPayload):
-                await handle_typing(user_id, payload)
+                await handle_typing(user_id, payload, db)
             elif isinstance(payload, MessageStatusPayload):
                 await handle_message_status(user_id, payload, db)
             elif isinstance(payload, PresencePayload):
