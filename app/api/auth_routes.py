@@ -58,7 +58,11 @@ def user_register(user: UserRegister, db: Session = Depends(get_db)):
             "access_token": access_token,
             "refresh_token": refresh_token,
             "user_id": new_user.fld_user_id,
-            "is_verified": new_user.fld_is_verified
+            "is_verified": new_user.fld_is_verified,
+            "username": new_user.fld_username,
+            "email": new_user.fld_email,
+            "avatar_url": new_user.fld_avatar_url,
+            "full_name": f"{new_user.fld_firstname} {new_user.fld_lastname}"
         }
 
         return {
