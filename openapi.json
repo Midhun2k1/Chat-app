@@ -1543,6 +1543,11 @@
             "type": "boolean",
             "title": "Is Read"
           },
+          "is_edited": {
+            "type": "boolean",
+            "title": "Is Edited",
+            "default": false
+          },
           "is_deleted_for_everyone": {
             "type": "boolean",
             "title": "Is Deleted For Everyone"

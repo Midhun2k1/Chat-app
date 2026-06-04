@@ -138,7 +138,8 @@ def get_messages(
             "is_read": msg.fld_is_read,
             "is_deleted_for_everyone": msg.fld_is_deleted_for_everyone,
             "is_delete_for_me": msg.fld_message_id in deleted_ids,
-            "reply_to": parent_msgs_dict[msg.parent_message_id].client_message_id if msg.parent_message_id and msg.parent_message_id in parent_msgs_dict else None
+            "reply_to": parent_msgs_dict[msg.parent_message_id].client_message_id if msg.parent_message_id and msg.parent_message_id in parent_msgs_dict else None,
+            "is_edited": getattr(msg, "fld_is_edited", False)
         }
         for msg in messages
     ]

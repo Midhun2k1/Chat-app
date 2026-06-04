@@ -199,6 +199,11 @@ export interface components {
             text: string;
             /** Editedat */
             editedAt?: string | null;
+            /**
+             * Isedited
+             * @default true
+             */
+            isEdited: boolean;
         };
         /** ReceiveMessagePayload */
         ReceiveMessagePayload: {
@@ -216,6 +221,11 @@ export interface components {
             serverTimestamp: string;
             /** Isdeletedforeveryone */
             isDeletedForEveryone: boolean;
+            /**
+             * Isedited
+             * @default false
+             */
+            isEdited: boolean;
             /** Replyto */
             replyTo?: string | null;
         };

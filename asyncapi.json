@@ -526,6 +526,11 @@
             ],
             "default": null,
             "title": "Editedat"
+          },
+          "isEdited": {
+            "default": true,
+            "title": "Isedited",
+            "type": "boolean"
           }
         },
         "required": [
@@ -563,6 +568,11 @@
           },
           "isDeletedForEveryone": {
             "title": "Isdeletedforeveryone",
+            "type": "boolean"
+          },
+          "isEdited": {
+            "default": false,
+            "title": "Isedited",
             "type": "boolean"
           },
           "replyTo": {

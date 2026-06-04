@@ -8,6 +8,7 @@ class MessageItem(BaseModel):
     message: str
     created_at: str
     is_read: bool
+    is_edited: bool = False
     is_deleted_for_everyone: bool
     is_delete_for_me: bool
     reply_to: Optional[str] = None

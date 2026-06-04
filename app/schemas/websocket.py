@@ -66,6 +66,7 @@ class ReceiveMessagePayload(BaseModel):
     createdAt: str
     serverTimestamp: str
     isDeletedForEveryone: bool
+    isEdited: bool = False
     replyTo: Optional[str] = None
 
 
@@ -91,6 +92,7 @@ class ReceiveEditMessagePayload(BaseModel):
     id: str
     text: str
     editedAt: Optional[str] = None
+    isEdited: bool = True
 
 class AckDeleteMultipleMessagesItem(BaseModel):
     id: str

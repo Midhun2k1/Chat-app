@@ -79,6 +79,7 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
                 createdAt=format_datetime_to_zulu(new_message.fld_created_at),
                 serverTimestamp=server_timestamp,
                 isDeletedForEveryone=new_message.fld_is_deleted_for_everyone,
+                isEdited=new_message.fld_is_edited,
                 replyTo=parent_msg.client_message_id if parent_msg else None
             ),
             timestamp=server_timestamp
@@ -230,6 +231,7 @@ async def handle_edit_message(user_id: int, payload: EditMessagePayload, db: Ses
             return
 
         message.fld_message = new_text
+        message.fld_is_edited = True
         db.commit()
 
         # ACK sender
@@ -248,7 +250,8 @@ async def handle_edit_message(user_id: int, payload: EditMessagePayload, db: Ses
             payload=ReceiveEditMessagePayload(
                 id=str(message_id),
                 text=new_text,
-                editedAt=format_datetime_to_zulu(edited_at) if edited_at else server_timestamp
+                editedAt=format_datetime_to_zulu(edited_at) if edited_at else server_timestamp,
+                isEdited=True
             ),
             timestamp=server_timestamp
         )
