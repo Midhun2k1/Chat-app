@@ -199,6 +199,7 @@ def get_user_chats(
     user_convs = db.query(
         Conversation.fld_conversation_Id,
         Message.fld_message.label("last_message_text"),
+        Message.fld_is_deleted_for_everyone.label("last_message_deleted"),
         Message.fld_created_at.label("last_message_time"),
         User.fld_username.label("last_message_sender_username"),
         func.coalesce(unread_subq.c.unread_count, 0).label("unread_count")
@@ -291,7 +292,7 @@ def get_user_chats(
             "name": chat_name,
             "type": chat_type,
             "unread_count": chat.unread_count,
-            "last_message_text": chat.last_message_text,
+            "last_message_text": "This message was deleted" if getattr(chat, "last_message_deleted", False) else chat.last_message_text,
             "updated_at": updated_at_str,
             "avatar_url": chat_avatar,
             "participants": {
