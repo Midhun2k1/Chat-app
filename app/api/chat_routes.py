@@ -13,6 +13,7 @@ from app.schemas.conversation import ConversationID, ChatList, ConversationCreat
 from app.schemas.message import MessageList, MessageFetchRequest, MarkAsReadRequest
 from app.utils.response_utils import success_response, error_response
 from app.utils.time_utils import format_datetime_to_zulu
+from app.services.object_storage import storage_service
 
 
 router = APIRouter()
@@ -258,7 +259,7 @@ def get_user_chats(
             "username": p.fld_username,
             "firstname": p.fld_firstname,
             "lastname": p.fld_lastname,
-            "avatar_url": p.fld_avatar_url
+            "avatar_url": storage_service.get_public_avatar_url(p.fld_avatar_url)
         })
 
     result = []
@@ -347,7 +348,7 @@ def get_chat_users_details(
             "first_name": user.fld_firstname,
             "last_name": user.fld_lastname,
             "email": user.fld_email,
-            "avatar_url": None,
+            "avatar_url": storage_service.get_public_avatar_url(user.fld_avatar_url),
             "phone_number": user.fld_phone
         })
 

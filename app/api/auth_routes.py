@@ -13,6 +13,7 @@ from app.utils.otp_utils import generate_otp
 from app.services.email_service import send_verification_email, send_password_reset_email
 from jose import JWTError, jwt
 from sqlalchemy import or_
+from app.services.object_storage import storage_service
 
 
 router = APIRouter()
@@ -61,7 +62,7 @@ def user_register(user: UserRegister, db: Session = Depends(get_db)):
             "is_verified": new_user.fld_is_verified,
             "username": new_user.fld_username,
             "email": new_user.fld_email,
-            "avatar_url": new_user.fld_avatar_url,
+            "avatar_url": storage_service.get_public_avatar_url(new_user.fld_avatar_url),
             "full_name": f"{new_user.fld_firstname} {new_user.fld_lastname}"
         }
 
@@ -106,7 +107,7 @@ def user_login(user: UserLogin, db: Session = Depends(get_db)):
             "is_verified": db_user.fld_is_verified,
             "username": db_user.fld_username,
             "email": db_user.fld_email,
-            "avatar_url": db_user.fld_avatar_url,
+            "avatar_url": storage_service.get_public_avatar_url(db_user.fld_avatar_url),
             "full_name": f"{db_user.fld_firstname} {db_user.fld_lastname}"
         }
         return {
@@ -227,7 +228,7 @@ def get_me(current_user: User = Depends(get_current_user)):
         "username": current_user.fld_username,
         "email": current_user.fld_email,
         "is_verified": current_user.fld_is_verified,
-        "avatar_url": current_user.fld_avatar_url,
+        "avatar_url": storage_service.get_public_avatar_url(current_user.fld_avatar_url),
         "full_name": f"{current_user.fld_firstname} {current_user.fld_lastname}"
     }
     return {

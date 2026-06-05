@@ -11,6 +11,8 @@ from app.auth.dependencies import get_current_user
 from app.schemas.user import UserSearchResponse, UserList, UserSearchRequest
 from app.schemas.response import StandardResponse
 from app.utils.response_utils import success_response
+from app.services.object_storage import storage_service
+from app.utils.image_utils import compress_image
 
 router = APIRouter()
 
@@ -30,10 +32,11 @@ def get_all_users(
             "username": user.fld_username,
             "email": user.fld_email,
             "phone": user.fld_phone,
-            "avatar_url": user.fld_avatar_url
+            "avatar_url": storage_service.get_public_avatar_url(user.fld_avatar_url)
         }
         for user in users
     ]
+
     return success_response(data={"users": users_list}, message="Users fetched successfully")
 
 
@@ -63,14 +66,15 @@ def search_users(
             "lastname": user.fld_lastname,
             "email": user.fld_email,
             "phone": user.fld_phone,
-            "avatar_url": user.fld_avatar_url
+            "avatar_url": storage_service.get_public_avatar_url(user.fld_avatar_url)
         }
         for user in users
     ]
+
     return success_response(data={"users": users_list}, message="Users fetched successfully")
 
 
-MAX_FILE_SIZE = 4 * 1024 * 1024  # 4MB
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 ALLOWED_EXTENSIONS = {"image/jpeg", "image/png", "image/webp"}
 
 @router.post("/users-avatar", response_model=StandardResponse[dict])
@@ -94,33 +98,46 @@ def upload_avatar(
     if file_size > MAX_FILE_SIZE:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="File is too large. Maximum size is 4MB."
+            detail="File is too large. Maximum size is 5MB."
         )
 
-    # 3. Create unique filename
-    file_extension = file.filename.split(".")[-1]
-    filename = f"avatar_user_{current_user.fld_user_id}.{file_extension}"
-    
-    # Define upload path
-    upload_folder = "static/uploads/avatars"
-    os.makedirs(upload_folder, exist_ok=True)
-    file_path = os.path.join(upload_folder, filename)
-
-    # 4. Save file to disk
+    # 3. Read image bytes and compress
     try:
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        raw_bytes = file.file.read()
+        compressed_bytes = compress_image(raw_bytes, file.content_type)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Could not save file: {str(e)}"
+            detail=f"Could not process image: {str(e)}"
         )
 
-    # 5. Save the relative path in the database
-    avatar_url = f"/static/uploads/avatars/{filename}"
-    current_user.fld_avatar_url = avatar_url
+    # 4. Delete old OCI object if user already has one to avoid orphans
+    if current_user.fld_avatar_url:
+        old_avatar = current_user.fld_avatar_url
+        if not (old_avatar.startswith("http://") or old_avatar.startswith("https://") or old_avatar.startswith("/static/")):
+            try:
+                storage_service.delete_file(old_avatar)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(f"Could not delete old avatar object '{old_avatar}': {str(e)}")
+
+    # 5. Generate unique object name and upload
+    object_name = storage_service.generate_object_name("profile-photos", file.filename)
+    try:
+        storage_service.upload_file(compressed_bytes, object_name, content_type=file.content_type)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to upload to OCI Object Storage: {str(e)}"
+        )
+
+    # 6. Save OCI object path in the database
+    current_user.fld_avatar_url = object_name
     db.commit()
     db.refresh(current_user)
+
+    # 7. Generate public URL dynamically to return to the client
+    avatar_url = storage_service.get_public_avatar_url(object_name)
 
     return success_response(
         data={"avatar_url": avatar_url},
