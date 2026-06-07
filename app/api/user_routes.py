@@ -74,8 +74,9 @@ def search_users(
     return success_response(data={"users": users_list}, message="Users fetched successfully")
 
 
-MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
-ALLOWED_EXTENSIONS = {"image/jpeg", "image/png", "image/webp"}
+MAX_FILE_SIZE = 30 * 1024 * 1024  # 30MB
+# We allow any content type starting with "image/"
+ALLOWED_PREFIX = "image/"
 
 @router.post("/users-avatar", response_model=StandardResponse[dict])
 def upload_avatar(
@@ -84,10 +85,10 @@ def upload_avatar(
     db: Session = Depends(get_db)
 ):
     # 1. Validate File Content Type
-    if file.content_type not in ALLOWED_EXTENSIONS:
+    if not file.content_type or not file.content_type.startswith(ALLOWED_PREFIX):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid file type. Only JPEG, PNG, and WebP images are allowed."
+            detail="Invalid file type. Only image files are allowed."
         )
 
     # 2. Validate File Size
