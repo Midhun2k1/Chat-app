@@ -85,6 +85,7 @@ def upload_avatar(
     db: Session = Depends(get_db)
 ):
     # 1. Validate File Content Type
+    print("came here",file)
     if not file.content_type or not file.content_type.startswith(ALLOWED_PREFIX):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
