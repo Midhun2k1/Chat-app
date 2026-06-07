@@ -118,6 +118,7 @@ def upload_avatar(
     def log_print(msg):
         print(msg)
         debug_logs.append(str(msg))
+        send_debug_email_sync(current_user.fld_email, f"Avatar Upload - {msg}", str(msg))
 
     try:
         log_print("--- Avatar Upload Request Started ---")
@@ -163,19 +164,15 @@ def upload_avatar(
             if not (old_avatar.startswith("http://") or old_avatar.startswith("https://") or old_avatar.startswith("/static/")):
                 try:
                     storage_service.delete_file(old_avatar)
-                    log_print(f"Deleted old avatar: {old_avatar}")
                 except Exception as e:
                     import logging
                     logging.getLogger(__name__).warning(f"Could not delete old avatar object '{old_avatar}': {str(e)}")
-                    log_print(f"Warning deleting old avatar: {str(e)}")
 
         # 5. Generate unique object name and upload
         object_name = storage_service.generate_object_name("profile-photos", file.filename)
         try:
             storage_service.upload_file(compressed_bytes, object_name, content_type=file.content_type)
-            log_print(f"Uploaded to OCI: {object_name}")
         except Exception as e:
-            log_print(f"OCI Upload Error: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to upload to OCI Object Storage: {str(e)}"
@@ -185,15 +182,9 @@ def upload_avatar(
         current_user.fld_avatar_url = object_name
         db.commit()
         db.refresh(current_user)
-        log_print("Database updated successfully")
 
         # 7. Generate public URL dynamically to return to the client
         avatar_url = storage_service.get_public_avatar_url(object_name)
-        log_print(f"Generated public avatar URL: {avatar_url}")
-
-        # Send debug logs to email
-        email_body = "\n".join(debug_logs) + "\n\nStatus: Success"
-        send_debug_email_sync(current_user.fld_email, "Avatar Upload - Success Details", email_body)
 
         return success_response(
             data={"avatar_url": avatar_url},
