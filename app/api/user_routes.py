@@ -95,17 +95,18 @@ def upload_avatar(
     file.file.seek(0, 2)
     file_size = file.file.tell()
     file.file.seek(0)
-    
+    print("file_size",file_size)
     if file_size > MAX_FILE_SIZE:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="File is too large. Maximum size is 5MB."
+            detail="File is too large. Maximum size is 30MB."
         )
 
     # 3. Read image bytes and compress
     try:
         raw_bytes = file.file.read()
         compressed_bytes = compress_image(raw_bytes, file.content_type)
+        print("compressed_bytes",compressed_bytes)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
