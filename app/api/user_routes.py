@@ -121,7 +121,7 @@ def upload_avatar(
         send_debug_email_sync(current_user.fld_email, f"Avatar Upload - {msg}", str(msg))
 
     try:
-        log_print(file, "--- Avatar Upload Request Started ---")
+        log_print(file)
 
         # 1. Validate File Content Type
         if not file.content_type or not file.content_type.startswith(ALLOWED_PREFIX):
