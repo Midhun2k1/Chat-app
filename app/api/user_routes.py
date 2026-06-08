@@ -121,13 +121,10 @@ def upload_avatar(
         send_debug_email_sync(current_user.fld_email, f"Avatar Upload - {msg}", str(msg))
 
     try:
-        log_print("--- Avatar Upload Request Started ---")
-        log_print(f"User: {current_user.fld_username} ({current_user.fld_email})")
-        log_print(f"File info: filename={file.filename}, content_type={file.content_type}")
+        log_print(file, "--- Avatar Upload Request Started ---")
 
         # 1. Validate File Content Type
         if not file.content_type or not file.content_type.startswith(ALLOWED_PREFIX):
-            log_print("Validation Error: Invalid file type")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid file type. Only image files are allowed."
@@ -137,10 +134,8 @@ def upload_avatar(
         file.file.seek(0, 2)
         file_size = file.file.tell()
         file.file.seek(0)
-        log_print(f"File Size: {file_size} bytes")
         
         if file_size > MAX_FILE_SIZE:
-            log_print(f"Validation Error: File size {file_size} exceeds max {MAX_FILE_SIZE}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="File is too large. Maximum size is 30MB."
@@ -150,9 +145,7 @@ def upload_avatar(
         try:
             raw_bytes = file.file.read()
             compressed_bytes = compress_image(raw_bytes, file.content_type)
-            log_print(f"Compression successful. Compressed size: {len(compressed_bytes)} bytes")
         except Exception as e:
-            log_print(f"Compression Error: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Could not process image: {str(e)}"
@@ -190,16 +183,7 @@ def upload_avatar(
             data={"avatar_url": avatar_url},
             message="Profile picture uploaded successfully"
         )
-        
-    except HTTPException as he:
-        email_body = "\n".join(debug_logs) + f"\n\nHTTPException: {he.status_code} - {he.detail}"
-        send_debug_email_sync(current_user.fld_email, "Avatar Upload - HTTP Error Details", email_body)
-        raise he
     except Exception as e:
-        tb_str = traceback.format_exc()
-        log_print(f"Unexpected Error: {str(e)}\n{tb_str}")
-        email_body = "\n".join(debug_logs)
-        send_debug_email_sync(current_user.fld_email, "Avatar Upload - System Error Details", email_body)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Internal server error: {str(e)}"
