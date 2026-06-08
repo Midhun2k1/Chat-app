@@ -181,10 +181,10 @@ def get_user_chats(
 ):
     user_id = current_user.fld_user_id
 
-    # Subquery: Latest message per conversation
+    # Subquery: Latest message ID per conversation (guaranteed unique)
     last_msg_subq = db.query(
         Message.fld_conversation_id,
-        func.max(Message.fld_created_at).label("last_time")
+        func.max(Message.fld_message_id).label("last_message_id")
     ).group_by(Message.fld_conversation_id).subquery()
 
     # Subquery: Unread count per conversation for this user
@@ -212,8 +212,7 @@ def get_user_chats(
         last_msg_subq.c.fld_conversation_id == Conversation.fld_conversation_Id
     ).join(
         Message,
-        (Message.fld_conversation_id == last_msg_subq.c.fld_conversation_id) &
-        (Message.fld_created_at == last_msg_subq.c.last_time)
+        Message.fld_message_id == last_msg_subq.c.last_message_id
     ).join(
         User,
         User.fld_user_id == Message.fld_sender_id
