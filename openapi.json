@@ -714,6 +714,28 @@
             "HTTPBearer": []
           }
         ]
+      },
+      "delete": {
+        "summary": "Delete Avatar",
+        "description": "Delete the authenticated user's profile picture.\nRemoves the file from object storage (if stored) and clears the avatar URL in the DB.",
+        "operationId": "delete_avatar_users_avatar_delete",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardResponse_dict_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/conversation": {

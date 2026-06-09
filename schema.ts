@@ -202,7 +202,12 @@ export interface paths {
         put?: never;
         /** Upload Avatar */
         post: operations["upload_avatar_users_avatar_post"];
-        delete?: never;
+        /**
+         * Delete Avatar
+         * @description Delete the authenticated user's profile picture.
+         *     Removes the file from object storage (if stored) and clears the avatar URL in the DB.
+         */
+        delete: operations["delete_avatar_users_avatar_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1389,6 +1394,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_avatar_users_avatar_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardResponse_dict_"];
                 };
             };
         };
