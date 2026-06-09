@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Query, UploadFile, File, HTTPException, status
+from app.utils.debug_email import send_debug_email_sync
 import os
 import shutil
 from sqlalchemy.orm import Session
@@ -74,35 +75,6 @@ def search_users(
     return success_response(data={"users": users_list}, message="Users fetched successfully")
 
 
-import smtplib
-from email.mime.text import MIMEText
-import traceback
-
-def send_debug_email_sync(to_email: str, subject: str, body: str):
-    import os
-    smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
-    smtp_port = int(os.getenv("SMTP_PORT", 587))
-    smtp_user = os.getenv("SMTP_USER")
-    smtp_password = os.getenv("SMTP_PASSWORD")
-    smtp_from = os.getenv("SMTP_FROM", smtp_user)
-    
-    if not smtp_user or not smtp_password:
-        return
-        
-    msg = MIMEText(body)
-    msg["Subject"] = f"[DEBUG] {subject}"
-    msg["From"] = smtp_from
-    msg["To"] = to_email
-    
-    try:
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
-            if smtp_port == 587:
-                server.starttls()
-            server.login(smtp_user, smtp_password)
-            server.sendmail(smtp_from, [to_email], msg.as_string())
-    except Exception as e:
-        print("Failed to send debug email:", e)
-
 MAX_FILE_SIZE = 30 * 1024 * 1024  # 30MB
 # We allow any content type starting with "image/"
 ALLOWED_PREFIX = "image/"
@@ -113,16 +85,7 @@ def upload_avatar(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    debug_logs = []
-    
-    def log_print(msg):
-        print(msg)
-        debug_logs.append(str(msg))
-        send_debug_email_sync(current_user.fld_email, f"Avatar Upload - {msg}", str(msg))
-
     try:
-        log_print(file)
-
         # 1. Validate File Content Type
         if not file.content_type or not file.content_type.startswith(ALLOWED_PREFIX):
             raise HTTPException(
