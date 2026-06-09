@@ -113,8 +113,8 @@ def get_messages(
     limit = request.limit
 
     # Get message IDs deleted for the current user
-    deleted_ids_rows = db.query(MessageDelete.message_id).filter(
-        MessageDelete.user_id == current_user.fld_user_id
+    deleted_ids_rows = db.query(MessageDelete.fld_message_id).filter(
+        MessageDelete.fld_user_id == current_user.fld_user_id
     ).all()
     deleted_ids = {row[0] for row in deleted_ids_rows}
 
@@ -123,23 +123,23 @@ def get_messages(
     ).order_by(Message.fld_created_at.desc()).offset(skip).limit(limit).all()
 
     # Get parent messages for quotes to avoid N+1 queries
-    parent_ids = [msg.parent_message_id for msg in messages if msg.parent_message_id]
+    parent_ids = [msg.fld_parent_message_id for msg in messages if msg.fld_parent_message_id]
     parent_msgs_dict = {}
     if parent_ids:
-        parent_msgs = db.query(Message).filter(Message.client_message_id.in_(parent_ids)).all()
-        parent_msgs_dict = {pm.client_message_id: pm for pm in parent_msgs}
+        parent_msgs = db.query(Message).filter(Message.fld_client_message_id.in_(parent_ids)).all()
+        parent_msgs_dict = {pm.fld_client_message_id: pm for pm in parent_msgs}
 
     # Format messages for the response
     formatted_messages = [
         {
-            "message_id": msg.client_message_id,
+            "message_id": msg.fld_client_message_id,
             "sender_id": msg.fld_sender_id,
             "message": msg.fld_message,
             "created_at": format_datetime_to_zulu(msg.fld_created_at),
             "is_read": msg.fld_is_read,
             "is_deleted_for_everyone": msg.fld_is_deleted_for_everyone,
             "is_delete_for_me": msg.fld_message_id in deleted_ids,
-            "reply_to": parent_msgs_dict[msg.parent_message_id].client_message_id if msg.parent_message_id and msg.parent_message_id in parent_msgs_dict else None,
+            "reply_to": parent_msgs_dict[msg.fld_parent_message_id].fld_client_message_id if msg.fld_parent_message_id and msg.fld_parent_message_id in parent_msgs_dict else None,
             "is_edited": getattr(msg, "fld_is_edited", False)
         }
         for msg in messages

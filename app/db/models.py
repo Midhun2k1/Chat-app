@@ -52,7 +52,7 @@ class Message(Base):
     fld_sender_id = Column(Integer, ForeignKey("tbl_users.fld_user_id"), nullable=False)
     #fld_receiver_id = Column(Integer, ForeignKey("tbl_users.fld_user_id"), nullable=False)
     fld_conversation_id = Column(Integer, ForeignKey("tbl_converssation.fld_conversation_Id"))
-    client_message_id =  Column(String(100), nullable=False)
+    fld_client_message_id =  Column(String(100), nullable=False)
 
     fld_message = Column(String, nullable=False)
     fld_is_read = Column(Boolean, default=False)  
@@ -60,16 +60,16 @@ class Message(Base):
     fld_is_deleted_for_everyone = Column(Boolean, default=False)
     fld_is_edited = Column(Boolean, default=False, server_default="false", nullable=False)
     fld_created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    deleted_for_everyone_at = Column(DateTime(timezone=True), nullable=True)
-    parent_message_id = Column(String(100), nullable=True)
+    fld_deleted_for_everyone_at = Column(DateTime(timezone=True), nullable=True)
+    fld_parent_message_id = Column(String(100), nullable=True)
 
 
 class MessageDelete(Base):
     __tablename__ = "tbl_message_deletes"
 
-    id = Column(Integer, primary_key=True)
+    fld_message_delete_id = Column(Integer, primary_key=True)
 
-    message_id = Column(Integer, ForeignKey("tbl_messages.fld_message_id"))
-    user_id = Column(Integer, ForeignKey("tbl_users.fld_user_id"))
+    fld_message_id = Column(Integer, ForeignKey("tbl_messages.fld_message_id"))
+    fld_user_id = Column(Integer, ForeignKey("tbl_users.fld_user_id"))
 
-    deleted_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    fld_deleted_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

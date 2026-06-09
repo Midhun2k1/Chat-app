@@ -35,8 +35,8 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
             fld_message=text,
             fld_created_at=parse_datetime(payload.createdAt),
             fld_is_read=False,
-            client_message_id=client_msg_id,
-            parent_message_id=parent_msg_id
+            fld_client_message_id=client_msg_id,
+            fld_parent_message_id=parent_msg_id
         )
 
         db.add(new_message)
@@ -66,7 +66,7 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
 
         parent_msg = None
         if parent_msg_id:
-            parent_msg = db.query(Message).filter(Message.client_message_id == parent_msg_id).first()
+            parent_msg = db.query(Message).filter(Message.fld_client_message_id == parent_msg_id).first()
 
         # Construct Broadcast message
         receive_msg = WsServerMessage(
@@ -80,7 +80,7 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
                 serverTimestamp=server_timestamp,
                 isDeletedForEveryone=new_message.fld_is_deleted_for_everyone,
                 isEdited=new_message.fld_is_edited,
-                replyTo=parent_msg.client_message_id if parent_msg else None
+                replyTo=parent_msg.fld_client_message_id if parent_msg else None
             ),
             timestamp=server_timestamp
         )
@@ -136,7 +136,7 @@ async def handle_message_status(user_id: int, payload: MessageStatusPayload, db:
         status = payload.status
 
         if status == "read":
-            target_message = db.query(Message).filter(Message.client_message_id == message_id).first()
+            target_message = db.query(Message).filter(Message.fld_client_message_id == message_id).first()
 
             # Verify participant involvement
             if target_message and not await verify_participant(user_id, target_message.fld_conversation_id, db):
@@ -205,7 +205,7 @@ async def handle_edit_message(user_id: int, payload: EditMessagePayload, db: Ses
         edited_at = payload.editedAt
 
         message = db.query(Message).filter(
-            Message.client_message_id == message_id,
+            Message.fld_client_message_id == message_id,
             Message.fld_sender_id == user_id
         ).first()
 
@@ -291,7 +291,7 @@ async def handle_delete_messages(user_id: int, payload: DeleteMultipleMessagesPa
             deleted_at_for_me = msg_item.deletedForMeAt
 
             message = db.query(Message).filter(
-                Message.client_message_id == message_id
+                Message.fld_client_message_id == message_id
             ).first()
 
             # Verify participant involvement
@@ -338,23 +338,23 @@ async def handle_delete_messages(user_id: int, payload: DeleteMultipleMessagesPa
             try:
                 if delete_type == "deleteForEveryone":
                     message.fld_is_deleted_for_everyone = True
-                    message.deleted_for_everyone_at = deleted_at_for_everyone or server_timestamp
+                    message.fld_deleted_for_everyone_at = deleted_at_for_everyone or server_timestamp
                     db.commit()
                 elif delete_type == "deleteForMe":
                     new_delete = MessageDelete(
-                        message_id=message.fld_message_id,
-                        user_id=user_id,
-                        deleted_at=deleted_at_for_me or server_timestamp
+                        fld_message_id=message.fld_message_id,
+                        fld_user_id=user_id,
+                        fld_deleted_at=deleted_at_for_me or server_timestamp
                     )
                     db.add(new_delete)
                     db.commit()
                 elif delete_type == "both":
                     message.fld_is_deleted_for_everyone = True
-                    message.deleted_for_everyone_at = deleted_at_for_everyone or server_timestamp
+                    message.fld_deleted_for_everyone_at = deleted_at_for_everyone or server_timestamp
                     new_delete = MessageDelete(
-                        message_id=message.fld_message_id,
-                        user_id=user_id,
-                        deleted_at=deleted_at_for_me or server_timestamp
+                        fld_message_id=message.fld_message_id,
+                        fld_user_id=user_id,
+                        fld_deleted_at=deleted_at_for_me or server_timestamp
                     )
                     db.add(new_delete)
                     db.commit()
