@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Query, UploadFile, File, HTTPException, 
 from app.utils.debug_email import send_debug_email_sync
 import os
 import shutil
+import logging
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from typing import List
@@ -151,3 +152,30 @@ def upload_avatar(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Internal server error: {str(e)}"
         )
+
+@router.delete("/users-avatar", response_model=StandardResponse[dict])
+def delete_avatar(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete the authenticated user's profile picture.
+    Removes the file from object storage (if stored) and clears the avatar URL in the DB.
+    """
+    old_avatar = current_user.fld_avatar_url
+    if not old_avatar:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No profile picture to delete."
+        )
+    # Delete from storage if it's an object name (not an external URL)
+    if not (old_avatar.startswith("http://") or old_avatar.startswith("https://") or old_avatar.startswith("/static/")):
+        try:
+            storage_service.delete_file(old_avatar)
+        except Exception as e:
+            logging.getLogger(__name__).warning(f"Could not delete avatar '{old_avatar}': {str(e)}")
+    # Clear avatar URL in DB
+    current_user.fld_avatar_url = None
+    db.commit()
+    db.refresh(current_user)
+    return success_response(data={}, message="Profile picture deleted successfully")
