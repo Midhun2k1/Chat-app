@@ -1246,7 +1246,7 @@
         "properties": {
           "file": {
             "type": "string",
-            "contentMediaType": "application/octet-stream",
+            "format": "binary",
             "title": "File"
           }
         },
@@ -2395,6 +2395,786 @@
           "user_id"
         ],
         "title": "VerifyOTPResponse"
+      },
+      "WsServerMessage": {
+        "$defs": {
+          "AckDeleteMultipleMessagesItem": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "deleteType": {
+                "enum": [
+                  "deleteForMe",
+                  "deleteForEveryone",
+                  "both"
+                ],
+                "title": "Deletetype",
+                "type": "string"
+              },
+              "deletedForEveryoneAt": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Deletedforeveryoneat"
+              },
+              "deletedForMeAt": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Deletedformeat"
+              },
+              "error": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Error"
+              }
+            },
+            "required": [
+              "id",
+              "deleteType"
+            ],
+            "title": "AckDeleteMultipleMessagesItem",
+            "type": "object"
+          },
+          "AckDeleteMultipleMessagesPayload": {
+            "properties": {
+              "protocolVersion": {
+                "default": "1.0",
+                "title": "Protocolversion",
+                "type": "string"
+              },
+              "messages": {
+                "items": {
+                  "$ref": "#/$defs/AckDeleteMultipleMessagesItem"
+                },
+                "title": "Messages",
+                "type": "array"
+              }
+            },
+            "required": [
+              "messages"
+            ],
+            "title": "AckDeleteMultipleMessagesPayload",
+            "type": "object"
+          },
+          "AckEditMessagePayload": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "editedAt": {
+                "title": "Editedat",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "editedAt"
+            ],
+            "title": "AckEditMessagePayload",
+            "type": "object"
+          },
+          "AckSendMessagePayload": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "serverTimestamp": {
+                "title": "Servertimestamp",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "serverTimestamp"
+            ],
+            "title": "AckSendMessagePayload",
+            "type": "object"
+          },
+          "ErrorPayload": {
+            "properties": {
+              "message": {
+                "title": "Message",
+                "type": "string"
+              }
+            },
+            "required": [
+              "message"
+            ],
+            "title": "ErrorPayload",
+            "type": "object"
+          },
+          "MessageStatusBroadcastPayload": {
+            "properties": {
+              "messageId": {
+                "title": "Messageid",
+                "type": "string"
+              },
+              "status": {
+                "title": "Status",
+                "type": "string"
+              }
+            },
+            "required": [
+              "messageId",
+              "status"
+            ],
+            "title": "MessageStatusBroadcastPayload",
+            "type": "object"
+          },
+          "OnlineUsersPayload": {
+            "properties": {
+              "user_ids": {
+                "items": {
+                  "type": "integer"
+                },
+                "title": "User Ids",
+                "type": "array"
+              },
+              "message": {
+                "title": "Message",
+                "type": "string"
+              }
+            },
+            "required": [
+              "user_ids",
+              "message"
+            ],
+            "title": "OnlineUsersPayload",
+            "type": "object"
+          },
+          "PresenceBroadcastPayload": {
+            "properties": {
+              "userId": {
+                "title": "Userid",
+                "type": "string"
+              },
+              "status": {
+                "title": "Status",
+                "type": "string"
+              }
+            },
+            "required": [
+              "userId",
+              "status"
+            ],
+            "title": "PresenceBroadcastPayload",
+            "type": "object"
+          },
+          "ReceiveDeleteMultipleMessagesItem": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "deleteType": {
+                "enum": [
+                  "deleteForEveryone",
+                  "both"
+                ],
+                "title": "Deletetype",
+                "type": "string"
+              },
+              "deletedForEveryoneAt": {
+                "title": "Deletedforeveryoneat",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "deleteType",
+              "deletedForEveryoneAt"
+            ],
+            "title": "ReceiveDeleteMultipleMessagesItem",
+            "type": "object"
+          },
+          "ReceiveDeleteMultipleMessagesPayload": {
+            "properties": {
+              "protocolVersion": {
+                "default": "1.0",
+                "title": "Protocolversion",
+                "type": "string"
+              },
+              "messages": {
+                "items": {
+                  "$ref": "#/$defs/ReceiveDeleteMultipleMessagesItem"
+                },
+                "title": "Messages",
+                "type": "array"
+              }
+            },
+            "required": [
+              "messages"
+            ],
+            "title": "ReceiveDeleteMultipleMessagesPayload",
+            "type": "object"
+          },
+          "ReceiveEditMessagePayload": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "text": {
+                "title": "Text",
+                "type": "string"
+              },
+              "editedAt": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Editedat"
+              },
+              "isEdited": {
+                "default": true,
+                "title": "Isedited",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "text"
+            ],
+            "title": "ReceiveEditMessagePayload",
+            "type": "object"
+          },
+          "ReceiveMessagePayload": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "chatId": {
+                "title": "Chatid",
+                "type": "string"
+              },
+              "text": {
+                "title": "Text",
+                "type": "string"
+              },
+              "senderId": {
+                "title": "Senderid",
+                "type": "string"
+              },
+              "createdAt": {
+                "title": "Createdat",
+                "type": "string"
+              },
+              "serverTimestamp": {
+                "title": "Servertimestamp",
+                "type": "string"
+              },
+              "isDeletedForEveryone": {
+                "title": "Isdeletedforeveryone",
+                "type": "boolean"
+              },
+              "isEdited": {
+                "default": false,
+                "title": "Isedited",
+                "type": "boolean"
+              },
+              "replyTo": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Replyto"
+              }
+            },
+            "required": [
+              "id",
+              "chatId",
+              "text",
+              "senderId",
+              "createdAt",
+              "serverTimestamp",
+              "isDeletedForEveryone"
+            ],
+            "title": "ReceiveMessagePayload",
+            "type": "object"
+          },
+          "TypingBroadcastPayload": {
+            "properties": {
+              "chatId": {
+                "title": "Chatid",
+                "type": "string"
+              },
+              "userId": {
+                "title": "Userid",
+                "type": "string"
+              },
+              "isTyping": {
+                "title": "Istyping",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "chatId",
+              "userId",
+              "isTyping"
+            ],
+            "title": "TypingBroadcastPayload",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "event": {
+            "enum": [
+              "ACK_SEND_MSG",
+              "RECEIVE_MSG",
+              "TYPING",
+              "MSG_STATUS",
+              "PRESENCE",
+              "ACK_EDIT_MSG",
+              "RECEIVE_EDIT_MSG",
+              "ACK_DELETE_MSGS",
+              "RECEIVE_DELETE_MSGS",
+              "ERROR",
+              "ONLINE_USERS"
+            ],
+            "title": "Event",
+            "type": "string"
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AckSendMessagePayload"
+              },
+              {
+                "$ref": "#/$defs/ReceiveMessagePayload"
+              },
+              {
+                "$ref": "#/$defs/TypingBroadcastPayload"
+              },
+              {
+                "$ref": "#/$defs/MessageStatusBroadcastPayload"
+              },
+              {
+                "$ref": "#/$defs/PresenceBroadcastPayload"
+              },
+              {
+                "$ref": "#/$defs/AckEditMessagePayload"
+              },
+              {
+                "$ref": "#/$defs/ReceiveEditMessagePayload"
+              },
+              {
+                "$ref": "#/$defs/AckDeleteMultipleMessagesPayload"
+              },
+              {
+                "$ref": "#/$defs/ReceiveDeleteMultipleMessagesPayload"
+              },
+              {
+                "$ref": "#/$defs/ErrorPayload"
+              },
+              {
+                "$ref": "#/$defs/OnlineUsersPayload"
+              }
+            ],
+            "title": "Payload"
+          },
+          "timestamp": {
+            "title": "Timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "event",
+          "payload",
+          "timestamp"
+        ],
+        "title": "WsServerMessage",
+        "type": "object"
+      },
+      "OnlineUsersPayload": {
+        "properties": {
+          "user_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "User Ids",
+            "type": "array"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_ids",
+          "message"
+        ],
+        "title": "OnlineUsersPayload",
+        "type": "object"
+      },
+      "AckSendMessagePayload": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "serverTimestamp": {
+            "title": "Servertimestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "serverTimestamp"
+        ],
+        "title": "AckSendMessagePayload",
+        "type": "object"
+      },
+      "ReceiveMessagePayload": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "chatId": {
+            "title": "Chatid",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "senderId": {
+            "title": "Senderid",
+            "type": "string"
+          },
+          "createdAt": {
+            "title": "Createdat",
+            "type": "string"
+          },
+          "serverTimestamp": {
+            "title": "Servertimestamp",
+            "type": "string"
+          },
+          "isDeletedForEveryone": {
+            "title": "Isdeletedforeveryone",
+            "type": "boolean"
+          },
+          "isEdited": {
+            "default": false,
+            "title": "Isedited",
+            "type": "boolean"
+          },
+          "replyTo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Replyto"
+          }
+        },
+        "required": [
+          "id",
+          "chatId",
+          "text",
+          "senderId",
+          "createdAt",
+          "serverTimestamp",
+          "isDeletedForEveryone"
+        ],
+        "title": "ReceiveMessagePayload",
+        "type": "object"
+      },
+      "TypingBroadcastPayload": {
+        "properties": {
+          "chatId": {
+            "title": "Chatid",
+            "type": "string"
+          },
+          "userId": {
+            "title": "Userid",
+            "type": "string"
+          },
+          "isTyping": {
+            "title": "Istyping",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "chatId",
+          "userId",
+          "isTyping"
+        ],
+        "title": "TypingBroadcastPayload",
+        "type": "object"
+      },
+      "MessageStatusBroadcastPayload": {
+        "properties": {
+          "messageId": {
+            "title": "Messageid",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "messageId",
+          "status"
+        ],
+        "title": "MessageStatusBroadcastPayload",
+        "type": "object"
+      },
+      "PresenceBroadcastPayload": {
+        "properties": {
+          "userId": {
+            "title": "Userid",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "userId",
+          "status"
+        ],
+        "title": "PresenceBroadcastPayload",
+        "type": "object"
+      },
+      "AckEditMessagePayload": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "editedAt": {
+            "title": "Editedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "editedAt"
+        ],
+        "title": "AckEditMessagePayload",
+        "type": "object"
+      },
+      "ReceiveEditMessagePayload": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "editedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Editedat"
+          },
+          "isEdited": {
+            "default": true,
+            "title": "Isedited",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "text"
+        ],
+        "title": "ReceiveEditMessagePayload",
+        "type": "object"
+      },
+      "AckDeleteMultipleMessagesPayload": {
+        "$defs": {
+          "AckDeleteMultipleMessagesItem": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "deleteType": {
+                "enum": [
+                  "deleteForMe",
+                  "deleteForEveryone",
+                  "both"
+                ],
+                "title": "Deletetype",
+                "type": "string"
+              },
+              "deletedForEveryoneAt": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Deletedforeveryoneat"
+              },
+              "deletedForMeAt": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Deletedformeat"
+              },
+              "error": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Error"
+              }
+            },
+            "required": [
+              "id",
+              "deleteType"
+            ],
+            "title": "AckDeleteMultipleMessagesItem",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "protocolVersion": {
+            "default": "1.0",
+            "title": "Protocolversion",
+            "type": "string"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/$defs/AckDeleteMultipleMessagesItem"
+            },
+            "title": "Messages",
+            "type": "array"
+          }
+        },
+        "required": [
+          "messages"
+        ],
+        "title": "AckDeleteMultipleMessagesPayload",
+        "type": "object"
+      },
+      "ReceiveDeleteMultipleMessagesPayload": {
+        "$defs": {
+          "ReceiveDeleteMultipleMessagesItem": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "deleteType": {
+                "enum": [
+                  "deleteForEveryone",
+                  "both"
+                ],
+                "title": "Deletetype",
+                "type": "string"
+              },
+              "deletedForEveryoneAt": {
+                "title": "Deletedforeveryoneat",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "deleteType",
+              "deletedForEveryoneAt"
+            ],
+            "title": "ReceiveDeleteMultipleMessagesItem",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "protocolVersion": {
+            "default": "1.0",
+            "title": "Protocolversion",
+            "type": "string"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/$defs/ReceiveDeleteMultipleMessagesItem"
+            },
+            "title": "Messages",
+            "type": "array"
+          }
+        },
+        "required": [
+          "messages"
+        ],
+        "title": "ReceiveDeleteMultipleMessagesPayload",
+        "type": "object"
+      },
+      "ErrorPayload": {
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "ErrorPayload",
+        "type": "object"
       }
     },
     "securitySchemes": {

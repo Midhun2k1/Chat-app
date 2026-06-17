@@ -5,7 +5,9 @@ from app.schemas.websocket import WsClientMessage, WsServerMessage
 def generate_asyncapi_spec():
     # 1. Generate JSON Schemas for both wrappers using Pydantic
     client_adapter = TypeAdapter(WsClientMessage)
+    client_adapter.rebuild()
     server_adapter = TypeAdapter(WsServerMessage)
+    server_adapter.rebuild()
     
     # We set ref_template to target AsyncAPI components
     client_schema = client_adapter.json_schema(ref_template="#/components/schemas/{model}")

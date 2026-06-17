@@ -154,6 +154,13 @@ export interface components {
              */
             status: "read" | "delivered";
         };
+        /** OnlineUsersPayload */
+        OnlineUsersPayload: {
+            /** User Ids */
+            user_ids: number[];
+            /** Message */
+            message: string;
+        };
         /** PresenceBroadcastPayload */
         PresenceBroadcastPayload: {
             /** Userid */
@@ -276,9 +283,9 @@ export interface components {
              * Event
              * @enum {string}
              */
-            event: "ACK_SEND_MSG" | "RECEIVE_MSG" | "TYPING" | "MSG_STATUS" | "PRESENCE" | "ACK_EDIT_MSG" | "RECEIVE_EDIT_MSG" | "ACK_DELETE_MSGS" | "RECEIVE_DELETE_MSGS" | "ERROR";
+            event: "ACK_SEND_MSG" | "RECEIVE_MSG" | "TYPING" | "MSG_STATUS" | "PRESENCE" | "ACK_EDIT_MSG" | "RECEIVE_EDIT_MSG" | "ACK_DELETE_MSGS" | "RECEIVE_DELETE_MSGS" | "ERROR" | "ONLINE_USERS";
             /** Payload */
-            payload: components["schemas"]["AckSendMessagePayload"] | components["schemas"]["ReceiveMessagePayload"] | components["schemas"]["TypingBroadcastPayload"] | components["schemas"]["MessageStatusBroadcastPayload"] | components["schemas"]["PresenceBroadcastPayload"] | components["schemas"]["AckEditMessagePayload"] | components["schemas"]["ReceiveEditMessagePayload"] | components["schemas"]["AckDeleteMultipleMessagesPayload"] | components["schemas"]["ReceiveDeleteMultipleMessagesPayload"] | components["schemas"]["ErrorPayload"];
+            payload: components["schemas"]["AckSendMessagePayload"] | components["schemas"]["ReceiveMessagePayload"] | components["schemas"]["TypingBroadcastPayload"] | components["schemas"]["MessageStatusBroadcastPayload"] | components["schemas"]["PresenceBroadcastPayload"] | components["schemas"]["AckEditMessagePayload"] | components["schemas"]["ReceiveEditMessagePayload"] | components["schemas"]["AckDeleteMultipleMessagesPayload"] | components["schemas"]["ReceiveDeleteMultipleMessagesPayload"] | components["schemas"]["ErrorPayload"] | components["schemas"]["OnlineUsersPayload"];
             /** Timestamp */
             timestamp: string;
         };

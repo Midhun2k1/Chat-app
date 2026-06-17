@@ -117,7 +117,10 @@ class ReceiveDeleteMultipleMessagesPayload(BaseModel):
 class ErrorPayload(BaseModel):
     message: str
 
-# --- Outgoing Message Wrapper ---
+class OnlineUsersPayload(BaseModel):
+    user_ids: List[int]  # list of online user IDs visible to the recipient
+    message: str
+
 
 class WsServerMessage(BaseModel):
     event: Literal[
@@ -130,7 +133,8 @@ class WsServerMessage(BaseModel):
         "RECEIVE_EDIT_MSG", 
         "ACK_DELETE_MSGS",
         "RECEIVE_DELETE_MSGS",
-        "ERROR"
+        "ERROR",
+        "ONLINE_USERS"
     ]
     payload: Union[
         AckSendMessagePayload,
@@ -142,6 +146,7 @@ class WsServerMessage(BaseModel):
         ReceiveEditMessagePayload,
         AckDeleteMultipleMessagesPayload,
         ReceiveDeleteMultipleMessagesPayload,
-        ErrorPayload
+        ErrorPayload,
+        OnlineUsersPayload
     ]
     timestamp: str

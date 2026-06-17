@@ -439,6 +439,27 @@
         "title": "MessageStatusBroadcastPayload",
         "type": "object"
       },
+      "OnlineUsersPayload": {
+        "properties": {
+          "user_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "User Ids",
+            "type": "array"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_ids",
+          "message"
+        ],
+        "title": "OnlineUsersPayload",
+        "type": "object"
+      },
       "PresenceBroadcastPayload": {
         "properties": {
           "userId": {
@@ -696,7 +717,8 @@
               "RECEIVE_EDIT_MSG",
               "ACK_DELETE_MSGS",
               "RECEIVE_DELETE_MSGS",
-              "ERROR"
+              "ERROR",
+              "ONLINE_USERS"
             ],
             "title": "Event",
             "type": "string"
@@ -732,6 +754,9 @@
               },
               {
                 "$ref": "#/components/schemas/ErrorPayload"
+              },
+              {
+                "$ref": "#/components/schemas/OnlineUsersPayload"
               }
             ],
             "title": "Payload"
