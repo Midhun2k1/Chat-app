@@ -1,9 +1,12 @@
 from datetime import datetime, timezone
+import asyncio
 from sqlalchemy.orm import Session
 from .participation import verify_participant
 from app.websocket.manager import manager
 from app.db.models import Message, ConversationParticipant, MessageDelete
 from app.utils.time_utils import format_datetime_to_zulu, parse_datetime
+from app.websocket.ai_handler import handle_bot_reply
+from app.services.embedding_service import embed_text
 from app.schemas.websocket import (
     SendMessagePayload, TypingPayload, MessageStatusPayload, PresencePayload,
     EditMessagePayload, WsServerMessage,
@@ -38,6 +41,12 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
             fld_client_message_id=client_msg_id,
             fld_parent_message_id=parent_msg_id
         )
+
+        # Generate semantic embedding (for search feature — fails silently if not ready)
+        try:
+            new_message.fld_embedding = embed_text(text)
+        except Exception as emb_err:
+            print(f"[Embedding] Failed (non-fatal): {emb_err}")
 
         db.add(new_message)
         db.commit()
@@ -92,6 +101,11 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
             target_sockets = manager.active_connections.get(target_uid, [])
             for ws in target_sockets:
                 await ws.send_json(receive_msg.model_dump())
+
+        # Trigger bot reply in background — user gets ACK immediately, bot replies ~1-2s later
+        asyncio.create_task(
+            handle_bot_reply(conversation_id=conversation_id)
+        )
 
     except Exception as e:
         print("SEND_MSG ERROR:", e)
@@ -232,6 +246,13 @@ async def handle_edit_message(user_id: int, payload: EditMessagePayload, db: Ses
 
         message.fld_message = new_text
         message.fld_is_edited = True
+
+        # Re-embed edited message so search stays accurate
+        try:
+            message.fld_embedding = embed_text(new_text)
+        except Exception as emb_err:
+            print(f"[Embedding] Re-embed failed (non-fatal): {emb_err}")
+
         db.commit()
 
         # ACK sender

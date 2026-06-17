@@ -607,6 +607,18 @@
             ],
             "default": null,
             "title": "Replyto"
+          },
+          "isBot": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": false,
+            "title": "Isbot"
           }
         },
         "required": [

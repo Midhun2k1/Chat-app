@@ -1,5 +1,6 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, DateTime, Text
 from datetime import datetime, timezone
+from pgvector.sqlalchemy import Vector
 from .database import Base
 
 class User(Base):
@@ -22,6 +23,7 @@ class User(Base):
     fld_reset_code = Column(String(10), nullable=True)
     fld_reset_code_expiry = Column(DateTime(timezone=True), nullable=True)
     fld_avatar_url = Column(String(255), nullable=True, default=None)
+    fld_is_bot = Column(Boolean, default=False, nullable=False, server_default="false")
 
     fld_created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     fld_updated_at = Column(DateTime(timezone=True), onupdate=lambda: datetime.now(timezone.utc))
@@ -62,6 +64,7 @@ class Message(Base):
     fld_created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     fld_deleted_for_everyone_at = Column(DateTime(timezone=True), nullable=True)
     fld_parent_message_id = Column(String(100), nullable=True)
+    fld_embedding = Column(Vector(384), nullable=True)
 
 
 class MessageDelete(Base):

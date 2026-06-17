@@ -235,6 +235,11 @@ export interface components {
             isEdited: boolean;
             /** Replyto */
             replyTo?: string | null;
+            /**
+             * Isbot
+             * @default false
+             */
+            isBot: boolean | null;
         };
         /** SendMessagePayload */
         SendMessagePayload: {

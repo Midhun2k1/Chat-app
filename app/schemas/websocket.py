@@ -68,6 +68,7 @@ class ReceiveMessagePayload(BaseModel):
     isDeletedForEveryone: bool
     isEdited: bool = False
     replyTo: Optional[str] = None
+    isBot: Optional[bool] = False
 
 
 
