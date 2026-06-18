@@ -1,4 +1,5 @@
 import uuid
+import asyncio
 from datetime import datetime, timezone
 from app.db.database import SessionLocal
 from app.db.models import Message, ConversationParticipant, User
@@ -6,6 +7,7 @@ from app.services.ai_service import get_bot_reply
 from app.services.embedding_service import embed_text
 from app.websocket.manager import manager
 from app.utils.time_utils import format_datetime_to_zulu
+from app.services.fcm_service import send_chat_notification
 
 BOT_USERNAME = "pingbee-ai"
 
@@ -109,6 +111,19 @@ async def handle_bot_reply(conversation_id: int):
             if p.fld_user_id == bot.fld_user_id:
                 continue
             await manager.send_personal_message(p.fld_user_id, receive_msg)
+
+        # Send push notifications for the bot message in the background
+        recipient_ids = [p.fld_user_id for p in participants if p.fld_user_id != bot.fld_user_id]
+        if recipient_ids:
+            asyncio.create_task(
+                send_chat_notification(
+                    sender_id=bot.fld_user_id,
+                    recipient_ids=recipient_ids,
+                    conversation_id=conversation_id,
+                    text=reply_text,
+                    client_msg_id=bot_client_id
+                )
+            )
 
     except Exception as e:
         import traceback

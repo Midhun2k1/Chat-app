@@ -7,6 +7,7 @@ from app.db.models import Message, ConversationParticipant, MessageDelete
 from app.utils.time_utils import format_datetime_to_zulu, parse_datetime
 from app.websocket.ai_handler import handle_bot_reply
 from app.services.embedding_service import embed_text
+from app.services.fcm_service import send_chat_notification
 from app.schemas.websocket import (
     SendMessagePayload, TypingPayload, MessageStatusPayload, PresencePayload,
     EditMessagePayload, WsServerMessage,
@@ -105,6 +106,17 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
         # Trigger bot reply in background — user gets ACK immediately, bot replies ~1-2s later
         asyncio.create_task(
             handle_bot_reply(conversation_id=conversation_id)
+        )
+
+        # Send push notifications in the background
+        asyncio.create_task(
+            send_chat_notification(
+                sender_id=user_id,
+                recipient_ids=list(unique_participant_ids),
+                conversation_id=conversation_id,
+                text=text,
+                client_msg_id=client_msg_id
+            )
         )
 
     except Exception as e:
