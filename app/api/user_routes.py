@@ -8,13 +8,14 @@ from sqlalchemy import or_
 from typing import List
 
 from app.db.database import get_db
-from app.db.models import User
+from app.db.models import User, FCMToken
 from app.auth.dependencies import get_current_user
-from app.schemas.user import UserSearchResponse, UserList, UserSearchRequest
+from app.schemas.user import UserSearchResponse, UserList, UserSearchRequest, FCMTokenRegisterRequest
 from app.schemas.response import StandardResponse
 from app.utils.response_utils import success_response
 from app.services.object_storage import storage_service
-from app.utils.image_utils import compress_image
+from app.utils.image_utils import compress_image    
+from datetime import datetime, timezone
 
 router = APIRouter()
 
@@ -179,3 +180,58 @@ def delete_avatar(
     db.commit()
     db.refresh(current_user)
     return success_response(data={}, message="Profile picture deleted successfully")
+
+
+@router.post("/fcm-token", response_model=StandardResponse[dict])
+def register_fcm_token(
+    request: FCMTokenRegisterRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    token = request.token.strip()
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token cannot be empty"
+        )
+    
+    # Check if this token already exists in the database
+    existing_token = db.query(FCMToken).filter(FCMToken.fld_token == token).first()
+    if existing_token:
+        # Update user association and time
+        existing_token.fld_user_id = current_user.fld_user_id
+        existing_token.fld_updated_at = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(existing_token)
+    else:
+        new_token = FCMToken(
+            fld_user_id=current_user.fld_user_id,
+            fld_token=token
+        )
+        db.add(new_token)
+        db.commit()
+        
+    return success_response(data={}, message="FCM Token registered successfully")
+
+
+@router.delete("/fcm-token", response_model=StandardResponse[dict])
+def delete_fcm_token(
+    request: FCMTokenRegisterRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    token = request.token.strip()
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token cannot be empty"
+        )
+        
+    # Delete token if it belongs to current_user
+    db.query(FCMToken).filter(
+        FCMToken.fld_token == token,
+        FCMToken.fld_user_id == current_user.fld_user_id
+    ).delete()
+    db.commit()
+    
+    return success_response(data={}, message="FCM Token deleted successfully")

@@ -72,3 +72,7 @@ class VerifyOTPResponse(BaseModel):
 class ResetPasswordByIdRequest(BaseModel):
     user_id: int
     new_password: str
+
+
+class FCMTokenRegisterRequest(BaseModel):
+    token: str

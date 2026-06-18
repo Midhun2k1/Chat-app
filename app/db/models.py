@@ -76,3 +76,14 @@ class MessageDelete(Base):
     fld_user_id = Column(Integer, ForeignKey("tbl_users.fld_user_id"))
 
     fld_deleted_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
+class FCMToken(Base):
+    __tablename__ = "tbl_fcm_tokens"
+
+    fld_fcm_token_id = Column(Integer, primary_key=True, index=True)
+    fld_user_id = Column(Integer, ForeignKey("tbl_users.fld_user_id", ondelete="CASCADE"), nullable=False)
+    fld_token = Column(Text, nullable=False, unique=True, index=True)
+
+    fld_created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    fld_updated_at = Column(DateTime(timezone=True), onupdate=lambda: datetime.now(timezone.utc), default=lambda: datetime.now(timezone.utc))
