@@ -80,7 +80,7 @@ class FCMService:
         access_token = self._get_oauth2_token()
         if not access_token or not self._project_id:
             return False
-        print(self._project_id, "self._project_id", flush=True)    
+   
         url = f"https://fcm.googleapis.com/v1/projects/{self._project_id}/messages:send"
         
         payload = {

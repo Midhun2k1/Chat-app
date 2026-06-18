@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+.todo
 
 # Python virtual environments
 venv/
