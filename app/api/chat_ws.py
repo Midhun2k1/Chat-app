@@ -46,7 +46,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 ws_msg = WsClientMessage(**data)
                 payload = ws_msg.payload
             except Exception as e:
-                print(f"WS Wrapper Validation Error: {e}")
+                print(f"WS Wrapper Validation Error: {e}", flush=True)
                 continue
 
             from app.schemas.websocket import (

@@ -31,7 +31,7 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
 
         if not await verify_participant(user_id, conversation_id, db):
             return
-        print("here is entry point.", flush=True)
+        #print("here is entry point.", flush=True)
         new_message = Message(
             fld_conversation_id=conversation_id,
             fld_sender_id=user_id,
@@ -46,7 +46,7 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
         try:
             new_message.fld_embedding = embed_text(text)
         except Exception as emb_err:
-            print(f"[Embedding] Failed (non-fatal): {emb_err}")
+            print(f"[Embedding] Failed (non-fatal): {emb_err}", flush=True)
 
         db.add(new_message)
         db.commit()
@@ -108,7 +108,7 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
         )
 
     except Exception as e:
-        print("SEND_MSG ERROR:", e)
+        print("SEND_MSG ERROR:", e, flush=True)
 
 
 
@@ -139,7 +139,7 @@ async def handle_typing(user_id: int, payload: TypingPayload, db: Session):
                     await ws.send_json(typing_msg.model_dump())
 
     except Exception as e:
-        print("TYPING ERROR:", e)
+        print("TYPING ERROR:", e, flush=True)
 
 
 
@@ -182,7 +182,7 @@ async def handle_message_status(user_id: int, payload: MessageStatusPayload, db:
                     await ws.send_json(status_msg.model_dump())
 
     except Exception as e:
-        print("MSG_STATUS ERROR:", e)
+        print("MSG_STATUS ERROR:", e, flush=True)
 
 
 
@@ -207,7 +207,7 @@ async def handle_presence(user_id: int, payload: PresencePayload):
                     await ws.send_json(presence_msg.model_dump())
 
     except Exception as e:
-        print("PRESENCE ERROR:", e)
+        print("PRESENCE ERROR:", e, flush=True)
 
 
 
@@ -251,7 +251,7 @@ async def handle_edit_message(user_id: int, payload: EditMessagePayload, db: Ses
         try:
             message.fld_embedding = embed_text(new_text)
         except Exception as emb_err:
-            print(f"[Embedding] Re-embed failed (non-fatal): {emb_err}")
+            print(f"[Embedding] Re-embed failed (non-fatal): {emb_err}", flush=True)
 
         db.commit()
 
@@ -294,7 +294,7 @@ async def handle_edit_message(user_id: int, payload: EditMessagePayload, db: Ses
     except Exception as e:
         import traceback
         traceback.print_exc()
-        print("EDIT_MSG ERROR:", e)
+        print("EDIT_MSG ERROR:", e, flush=True)
 
 
 
@@ -458,4 +458,4 @@ async def handle_delete_messages(user_id: int, payload: DeleteMultipleMessagesPa
                     await ws.send_json(receive_msg.model_dump())
 
     except Exception as e:
-        print("DELETE_MSGS ERROR:", e)
+        print("DELETE_MSGS ERROR:", e, flush=True)

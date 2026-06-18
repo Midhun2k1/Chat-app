@@ -28,5 +28,5 @@ def send_debug_email_sync(to_email: str, subject: str, body: str):
             server.sendmail(smtp_from, [to_email], msg.as_string())
     except Exception as e:
         # Print error for debugging purposes; could be logged instead.
-        print("Failed to send debug email:", e)
+        print("Failed to send debug email:", e, flush=True)
         traceback.print_exc()

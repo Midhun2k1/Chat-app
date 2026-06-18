@@ -47,11 +47,10 @@ def _build_context(conversation_id: int, bot_user_id: int, db, limit: int = 10) 
 
 async def handle_bot_reply(conversation_id: int):
     db = SessionLocal()
-    print("came here =======1")
     try:
         bot = _get_bot_user(db)
         if not bot:
-            print("[AI Handler] Bot user not found. Run setup_ai_features.py first.")
+            print("[AI Handler] Bot user not found. Run setup_ai_features.py first.", flush=True)
             return
 
         if not _is_bot_participant(conversation_id, bot.fld_user_id, db):
@@ -76,7 +75,7 @@ async def handle_bot_reply(conversation_id: int):
         try:
             bot_message.fld_embedding = embed_text(reply_text)
         except Exception as emb_err:
-            print(f"[AI Handler] Embedding failed (non-fatal): {emb_err}")
+            print(f"[AI Handler] Embedding failed (non-fatal): {emb_err}", flush=True)
 
         db.add(bot_message)
         db.commit()
@@ -114,6 +113,6 @@ async def handle_bot_reply(conversation_id: int):
     except Exception as e:
         import traceback
         traceback.print_exc()
-        print(f"[AI Handler] Error: {e}")
+        print(f"[AI Handler] Error: {e}", flush=True)
     finally:
         db.close()

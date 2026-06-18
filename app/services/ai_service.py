@@ -28,5 +28,5 @@ async def get_bot_reply(conversation_history: list[dict]) -> str:
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
-        print(f"[AI Service] Groq API error: {e}")
+        print(f"[AI Service] Groq API error: {e}", flush=True)
         return "Sorry, I'm having trouble thinking right now. Try again in a moment! 🤖"

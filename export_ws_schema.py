@@ -49,7 +49,7 @@ def export_ws_schema():
     with open(temp_file, "w") as f:
         json.dump(openapi_schema, f, indent=2)
 
-    print("Generating WebSocket TypeScript types...")
+    print("Generating WebSocket TypeScript types...", flush=True)
     try:
         result = subprocess.run(
             ["npx", "openapi-typescript", temp_file, "-o", "websocket_schema.ts"], 
@@ -58,10 +58,10 @@ def export_ws_schema():
             capture_output=True,
             text=True
         )
-        print(result.stdout)
-        print("WebSocket TypeScript types generated in websocket_schema.ts")
+        print(result.stdout, flush=True)
+        print("WebSocket TypeScript types generated in websocket_schema.ts", flush=True)
     except subprocess.CalledProcessError as e:
-        print(f"Error generating TypeScript types: {e.stderr}")
+        print(f"Error generating TypeScript types: {e.stderr}", flush=True)
     finally:
         if os.path.exists(temp_file):
             os.remove(temp_file)
