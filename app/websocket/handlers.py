@@ -31,7 +31,7 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
 
         if not await verify_participant(user_id, conversation_id, db):
             return
-
+        print("here is entry point.")
         new_message = Message(
             fld_conversation_id=conversation_id,
             fld_sender_id=user_id,
