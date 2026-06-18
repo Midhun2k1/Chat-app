@@ -129,10 +129,12 @@ async def send_chat_notification(sender_id: int, recipient_ids: list[int], conve
     db = SessionLocal()
     try:
         sender = db.query(User).filter(User.fld_user_id == sender_id).first()
+        print("entered notification frst fn", flush=True)
         if not sender:
             return
             
         title = f"{sender.fld_firstname} {sender.fld_lastname}".strip()
+        print("title", title, flush=True)
         if not title:
             title = sender.fld_username
             
