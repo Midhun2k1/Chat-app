@@ -738,6 +738,90 @@
         ]
       }
     },
+    "/fcm-token": {
+      "post": {
+        "summary": "Register Fcm Token",
+        "operationId": "register_fcm_token_fcm_token_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FCMTokenRegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardResponse_FCMTokenRegisterResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "delete": {
+        "summary": "Delete Fcm Token",
+        "operationId": "delete_fcm_token_fcm_token_delete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FCMTokenDeleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardResponse_FCMTokenDeleteResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/conversation": {
       "post": {
         "summary": "Create Or Get Conversation",
@@ -1466,6 +1550,68 @@
         ],
         "title": "ErrorResponse"
       },
+      "FCMTokenDeleteRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "FCMTokenDeleteRequest"
+      },
+      "FCMTokenDeleteResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "FCMTokenDeleteResponse"
+      },
+      "FCMTokenRegisterRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "FCMTokenRegisterRequest"
+      },
+      "FCMTokenRegisterResponse": {
+        "properties": {
+          "fld_fcm_token_id": {
+            "type": "integer",
+            "title": "Fld Fcm Token Id"
+          },
+          "fld_user_id": {
+            "type": "integer",
+            "title": "Fld User Id"
+          },
+          "fld_token": {
+            "type": "string",
+            "title": "Fld Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fld_fcm_token_id",
+          "fld_user_id",
+          "fld_token"
+        ],
+        "title": "FCMTokenRegisterResponse"
+      },
       "ForgotPasswordRequest": {
         "properties": {
           "email": {
@@ -1761,6 +1907,72 @@
           "message"
         ],
         "title": "StandardResponse[ConversationID]"
+      },
+      "StandardResponse_FCMTokenDeleteResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "status": {
+            "type": "integer",
+            "title": "Status"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FCMTokenDeleteResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "status",
+          "message"
+        ],
+        "title": "StandardResponse[FCMTokenDeleteResponse]"
+      },
+      "StandardResponse_FCMTokenRegisterResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "status": {
+            "type": "integer",
+            "title": "Status"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FCMTokenRegisterResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "status",
+          "message"
+        ],
+        "title": "StandardResponse[FCMTokenRegisterResponse]"
       },
       "StandardResponse_List_UserDetail__": {
         "properties": {

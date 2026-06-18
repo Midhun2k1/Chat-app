@@ -10,7 +10,11 @@ from typing import List
 from app.db.database import get_db
 from app.db.models import User, FCMToken
 from app.auth.dependencies import get_current_user
-from app.schemas.user import UserSearchResponse, UserList, UserSearchRequest, FCMTokenRegisterRequest
+from app.schemas.user import (
+    UserSearchResponse, UserList, UserSearchRequest,
+    FCMTokenRegisterRequest, FCMTokenRegisterResponse,
+    FCMTokenDeleteRequest, FCMTokenDeleteResponse
+)
 from app.schemas.response import StandardResponse
 from app.utils.response_utils import success_response
 from app.services.object_storage import storage_service
@@ -182,7 +186,7 @@ def delete_avatar(
     return success_response(data={}, message="Profile picture deleted successfully")
 
 
-@router.post("/fcm-token", response_model=StandardResponse[dict])
+@router.post("/fcm-token", response_model=StandardResponse[FCMTokenRegisterResponse])
 def register_fcm_token(
     request: FCMTokenRegisterRequest,
     current_user: User = Depends(get_current_user),
@@ -203,6 +207,7 @@ def register_fcm_token(
         existing_token.fld_updated_at = datetime.now(timezone.utc)
         db.commit()
         db.refresh(existing_token)
+        token_data = existing_token
     else:
         new_token = FCMToken(
             fld_user_id=current_user.fld_user_id,
@@ -210,13 +215,20 @@ def register_fcm_token(
         )
         db.add(new_token)
         db.commit()
+        db.refresh(new_token)
+        token_data = new_token
         
-    return success_response(data={}, message="FCM Token registered successfully")
+    response_data = {
+        "fld_fcm_token_id": token_data.fld_fcm_token_id,
+        "fld_user_id": token_data.fld_user_id,
+        "fld_token": token_data.fld_token
+    }
+    return success_response(data=response_data, message="FCM Token registered successfully")
 
 
-@router.delete("/fcm-token", response_model=StandardResponse[dict])
+@router.delete("/fcm-token", response_model=StandardResponse[FCMTokenDeleteResponse])
 def delete_fcm_token(
-    request: FCMTokenRegisterRequest,
+    request: FCMTokenDeleteRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -234,4 +246,4 @@ def delete_fcm_token(
     ).delete()
     db.commit()
     
-    return success_response(data={}, message="FCM Token deleted successfully")
+    return success_response(data={"message": "Token deleted successfully"}, message="FCM Token deleted successfully")

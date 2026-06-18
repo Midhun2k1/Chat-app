@@ -73,6 +73,19 @@ class ResetPasswordByIdRequest(BaseModel):
     user_id: int
     new_password: str
 
-
 class FCMTokenRegisterRequest(BaseModel):
     token: str
+
+class FCMTokenRegisterResponse(BaseModel):
+    fld_fcm_token_id: int
+    fld_user_id: int
+    fld_token: str
+
+    class Config:
+        from_attributes = True
+
+class FCMTokenDeleteRequest(BaseModel):
+    token: str
+
+class FCMTokenDeleteResponse(BaseModel):
+    message: str
