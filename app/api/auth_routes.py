@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
-from app.db.models import User
+from app.db.models import User, Conversation, ConversationParticipant
 from app.schemas.user import UserRegister, UserLogin, EmailVerification, ResendOTP, AuthResponseData, UserMeResponse, ForgotPasswordRequest, VerifyOTPRequest, VerifyOTPResponse, ResetPasswordByIdRequest
 from app.schemas.token import Token, RefreshTokenRequest
 from app.schemas.response import StandardResponse, ErrorResponse
@@ -54,6 +54,19 @@ def user_register(user: UserRegister, db: Session = Depends(get_db)):
         refresh_token = create_refresh_token(
             data={"user_id": new_user.fld_user_id}
         )
+
+        # Create a conversation with Pingy bot (user_id 999)
+        pingy_user = db.query(User).filter(User.fld_is_bot == True).first()
+        if not pingy_user:
+            raise HTTPException(status_code=500, detail="Pingy bot not configured")
+        # Create a new Conversation entry
+        new_conversation = Conversation()
+        db.add(new_conversation)
+        db.flush()  # Populate new_conversation.fld_conversation_Id
+        db.add(ConversationParticipant(fld_conversation_id=new_conversation.fld_conversation_Id, fld_user_id=new_user.fld_user_id))
+        db.add(ConversationParticipant(fld_conversation_id=new_conversation.fld_conversation_Id, fld_user_id=pingy_user.fld_user_id))
+        db.commit()
+        db.refresh(new_conversation)
 
         data = {
             "access_token": access_token,
