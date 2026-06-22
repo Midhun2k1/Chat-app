@@ -152,13 +152,11 @@ async def send_chat_notification(sender_id: int, recipient_ids: list[int], conve
             
         data = {
             "chatId": str(conversation_id),
-            "senderId": str(sender_id),
+            "otherUserId": str(sender_id),
             "messageId": client_msg_id,
             "name": title,
             "avatarUrl": storage_service.get_public_avatar_url(sender.fld_avatar_url),
-            "otherUserId": str(recipient_ids[0]),
-            "chatType": "individual",
-            "type": "RECEIVE_MSG"
+            "chatType": "individual"
         }
 
         print(data, "data", flush=True)
