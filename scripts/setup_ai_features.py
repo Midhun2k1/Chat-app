@@ -53,7 +53,7 @@ def run_migrations():
             # 4. Insert Bot Account if it doesn't exist
             print("[Migration] Checking if BuzzBee bot account exists...")
             res_bot_user = conn.execute(text(
-                "SELECT fld_user_id FROM tbl_users WHERE fld_username = 'pingbee-ai';"
+                "SELECT fld_user_id FROM tbl_users WHERE fld_username = 'pingy';"
             )).fetchone()
 
             if not res_bot_user:
@@ -65,21 +65,21 @@ def run_migrations():
                         fld_hashed_password, fld_is_active, fld_is_verified, fld_is_bot,
                         fld_created_at
                     ) VALUES (
-                        999, 'Buzz', ' ', 'pingbee-ai',
+                        999, 'Pingy', ' ', 'pingy',
                         '$2b$12$BOTACCOUNTNOLOGINALLOWED',
                         TRUE, TRUE, TRUE, NOW()
                     );
                 """))
                 conn.commit()
-                print("[Migration] Buzz bot account created with ID 999. [OK]")
+                print("[Migration] Pingy bot account created with ID 999. [OK]")
             else:
                 # Ensure it is marked as bot
                 print("[Migration] Bot account already exists, ensuring fld_is_bot=TRUE...")
                 conn.execute(text(
-                    "UPDATE tbl_users SET fld_is_bot = TRUE WHERE fld_username = 'pingbee-ai';"
+                    "UPDATE tbl_users SET fld_is_bot = TRUE WHERE fld_username = 'pingy';"
                 ))
                 conn.commit()
-                print("[Migration] Buzz bot account verified. [OK]")
+                print("[Migration] Pingy bot account verified. [OK]")
 
         print("[Migration] All migrations completed successfully! [DONE]")
     except Exception as e:
