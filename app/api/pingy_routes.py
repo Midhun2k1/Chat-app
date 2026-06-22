@@ -1,0 +1,44 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from app.schemas.response import ErrorResponse, StandardResponse
+from app.auth.dependencies import get_current_user
+from app.schemas.pingy import PingyDetails
+from sqlalchemy.orm import Session
+from app.db.database import get_db
+from app.db.models import User, ConversationParticipant
+from app.services.object_storage import storage_service
+
+router = APIRouter()
+
+common_responses = {
+    401: {"model": ErrorResponse},
+    404: {"model": ErrorResponse},
+    500: {"model": ErrorResponse},
+}
+
+@router.get("/pingy-details", response_model=StandardResponse[dict], responses=common_responses)
+def get_pingy_details(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+
+    pingy_user = db.query(User).filter(User.fld_user_id == 999).first()
+    if not pingy_user:
+        raise HTTPException(status_code=404, detail="Pingy user not found")
+    # Fetch conversation id where pingy participates
+    conv_entry = db.query(ConversationParticipant.fld_conversation_id).filter(
+        ConversationParticipant.fld_user_id == pingy_user.fld_user_id
+    ).first()
+    conversation_id = conv_entry[0] if conv_entry else None
+    data = PingyDetails(
+        username=pingy_user.fld_username,
+        chatId=str(conversation_id) if conversation_id else "",
+        avatarUrl=storage_service.get_public_avatar_url(pingy_user.fld_avatar_url),
+        pingyUserId=str(pingy_user.fld_user_id),
+        isEnabled=pingy_user.fld_is_bot,
+    )
+    return {
+        "success": True,
+        "status": 200,
+        "message": "Pingy details retrieved",
+        "data": {
+            "pingyDetails": data,
+            "conversationId": conversation_id,
+        },
+    }
