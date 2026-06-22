@@ -4,6 +4,7 @@ from app.auth.dependencies import get_current_user
 from app.schemas.pingy import PingyDetails
 from sqlalchemy.orm import Session
 from app.db.database import get_db
+from sqlalchemy import func, distinct
 from app.db.models import User, ConversationParticipant
 from app.services.object_storage import storage_service
 
@@ -21,10 +22,16 @@ def get_pingy_details(current_user = Depends(get_current_user), db: Session = De
     pingy_user = db.query(User).filter(User.fld_user_id == 999).first()
     if not pingy_user:
         raise HTTPException(status_code=404, detail="Pingy user not found")
-    # Fetch conversation id where pingy participates
-    conv_entry = db.query(ConversationParticipant.fld_conversation_id).filter(
-        ConversationParticipant.fld_user_id == pingy_user.fld_user_id
-    ).first()
+    # Fetch conversation ID where both the pingy user and the current user are participants
+    subq = (
+        db.query(ConversationParticipant.fld_conversation_id)
+        .filter(ConversationParticipant.fld_user_id.in_([pingy_user.fld_user_id, current_user.fld_user_id]))
+        .group_by(ConversationParticipant.fld_conversation_id)
+        .having(func.count(distinct(ConversationParticipant.fld_user_id)) == 2)
+        .subquery()
+    )
+    
+    conv_entry = db.query(subq.c.fld_conversation_id).first()
     conversation_id = conv_entry[0] if conv_entry else None
     print("====================================================", flush=True)
     print("pingy_user.fld_user_id",pingy_user.fld_user_id, flush=True)
