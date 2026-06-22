@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 
 from app.db.database import SessionLocal
 from app.db.models import FCMToken, User
+from app.services.object_storage import storage_service
 
 class FCMService:
     def __init__(self):
@@ -154,7 +155,7 @@ async def send_chat_notification(sender_id: int, recipient_ids: list[int], conve
             "senderId": str(sender_id),
             "messageId": client_msg_id,
             "name": title,
-            "avatarUrl": sender.fld_avatar_url,
+            "avatarUrl": storage_service.get_public_avatar_url(sender.fld_avatar_url),
             "type": "RECEIVE_MSG"
         }
 
