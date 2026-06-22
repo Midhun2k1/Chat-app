@@ -38,6 +38,7 @@ def get_pingy_details(current_user = Depends(get_current_user), db: Session = De
         pingyUserId=str(pingy_user.fld_user_id),
         isEnabled=pingy_user.fld_is_bot,
     )
+    print("data", data, flush=True)
     return {
         "success": True,
         "status": 200,
