@@ -157,6 +157,7 @@ async def send_chat_notification(sender_id: int, recipient_ids: list[int], conve
             "name": title,
             "avatarUrl": storage_service.get_public_avatar_url(sender.fld_avatar_url),
             "otherUserId": str(recipient_ids[0]),
+            "chatType": "individual",
             "type": "RECEIVE_MSG"
         }
 
