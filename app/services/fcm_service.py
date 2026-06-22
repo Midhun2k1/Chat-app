@@ -155,9 +155,13 @@ async def send_chat_notification(sender_id: int, recipient_ids: list[int], conve
             "otherUserId": str(sender_id),
             "messageId": client_msg_id,
             "name": title,
-            "avatarUrl": storage_service.get_public_avatar_url(sender.fld_avatar_url),
             "chatType": "individual"
         }
+
+        if sender.fld_avatar_url:
+            avatar_url = storage_service.get_public_avatar_url(sender.fld_avatar_url)
+            if avatar_url:
+                data["avatarUrl"] = avatar_url
         
         await fcm_service.send_multicast_notifications(token_list, title, body, data)
     except Exception as e:
