@@ -134,7 +134,7 @@ async def send_chat_notification(sender_id: int, recipient_ids: list[int], conve
             return
             
         title = f"{sender.fld_firstname} {sender.fld_lastname}".strip()
-        print("title", title, flush=True)
+
         if not title:
             title = sender.fld_username
             
@@ -158,8 +158,6 @@ async def send_chat_notification(sender_id: int, recipient_ids: list[int], conve
             "avatarUrl": storage_service.get_public_avatar_url(sender.fld_avatar_url),
             "chatType": "individual"
         }
-
-        print(data, "data", flush=True)
         
         await fcm_service.send_multicast_notifications(token_list, title, body, data)
     except Exception as e:
