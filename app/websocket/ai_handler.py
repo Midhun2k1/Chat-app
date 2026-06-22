@@ -9,7 +9,7 @@ from app.websocket.manager import manager
 from app.utils.time_utils import format_datetime_to_zulu
 from app.services.fcm_service import send_chat_notification
 
-BOT_USERNAME = "pingbee-ai"
+BOT_USERNAME = "pingy"
 
 
 def _get_bot_user(db) -> User | None:

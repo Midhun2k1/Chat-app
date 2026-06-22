@@ -9,7 +9,7 @@ client = AsyncGroq(api_key=os.getenv("GROQ_API_KEY"))
 MODEL = "llama-3.3-70b-versatile"
 CONTEXT_WINDOW = 10
 
-SYSTEM_PROMPT = """You are Buzz, a friendly and helpful assistant 
+SYSTEM_PROMPT = """You are Pingy, a friendly and helpful assistant 
 inside the PingBee chat app. Keep replies concise and conversational — 
 this is a chat app, not an essay. If you don't know something, say so honestly."""
 
