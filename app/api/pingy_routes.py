@@ -26,6 +26,11 @@ def get_pingy_details(current_user = Depends(get_current_user), db: Session = De
         ConversationParticipant.fld_user_id == pingy_user.fld_user_id
     ).first()
     conversation_id = conv_entry[0] if conv_entry else None
+    print("====================================================", flush=True)
+    print("pingy_user.fld_user_id",pingy_user.fld_user_id, flush=True)
+    print("pingy_user.fld_username",pingy_user.fld_username, flush=True)
+    print("conversation_id",conversation_id, flush=True)
+    print("====================================================", flush=True)
     data = PingyDetails(
         username=pingy_user.fld_username,
         chatId=str(conversation_id) if conversation_id else "",
