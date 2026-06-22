@@ -153,6 +153,8 @@ async def send_chat_notification(sender_id: int, recipient_ids: list[int], conve
             "chatId": str(conversation_id),
             "senderId": str(sender_id),
             "messageId": client_msg_id,
+            "name": title,
+            "avatarUrl": sender.fld_avatar_url,
             "type": "RECEIVE_MSG"
         }
         
