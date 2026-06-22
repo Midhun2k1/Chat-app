@@ -157,6 +157,8 @@ async def send_chat_notification(sender_id: int, recipient_ids: list[int], conve
             "avatarUrl": sender.fld_avatar_url,
             "type": "RECEIVE_MSG"
         }
+
+        print(data, "data")
         
         await fcm_service.send_multicast_notifications(token_list, title, body, data)
     except Exception as e:
