@@ -8,6 +8,7 @@ from app.utils.time_utils import format_datetime_to_zulu, parse_datetime
 from app.websocket.ai_handler import handle_bot_reply
 from app.services.embedding_service import embed_text
 from app.services.fcm_service import send_chat_notification
+from app.services.object_storage import storage_service, extract_object_name
 from app.schemas.websocket import (
     SendMessagePayload, TypingPayload, MessageStatusPayload, PresencePayload,
     EditMessagePayload, WsServerMessage,
@@ -33,6 +34,9 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
         if not await verify_participant(user_id, conversation_id, db):
             return
         #print("here is entry point.", flush=True)
+        msg_type = payload.type or "text"
+        media_relative_path = extract_object_name(payload.audioUrl) if payload.audioUrl else None
+
         new_message = Message(
             fld_conversation_id=conversation_id,
             fld_sender_id=user_id,
@@ -40,7 +44,10 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
             fld_created_at=parse_datetime(payload.createdAt),
             fld_is_read=False,
             fld_client_message_id=client_msg_id,
-            fld_parent_message_id=parent_msg_id
+            fld_parent_message_id=parent_msg_id,
+            fld_message_type=msg_type,
+            fld_media_url=media_relative_path,
+            fld_duration_seconds=payload.durationSeconds
         )
 
         # Generate semantic embedding (for search feature — fails silently if not ready)
@@ -90,7 +97,10 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
                 serverTimestamp=server_timestamp,
                 isDeletedForEveryone=new_message.fld_is_deleted_for_everyone,
                 isEdited=new_message.fld_is_edited,
-                replyTo=parent_msg.fld_client_message_id if parent_msg else None
+                replyTo=parent_msg.fld_client_message_id if parent_msg else None,
+                type=new_message.fld_message_type,
+                audioUrl=storage_service.get_public_url(new_message.fld_media_url),
+                durationSeconds=new_message.fld_duration_seconds
             ),
             timestamp=server_timestamp
         )
@@ -115,7 +125,8 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
                 recipient_ids=list(unique_participant_ids),
                 conversation_id=conversation_id,
                 text=text,
-                client_msg_id=client_msg_id
+                client_msg_id=client_msg_id,
+                message_type=msg_type
             )
         )
 

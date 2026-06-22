@@ -9,6 +9,9 @@ class SendMessagePayload(BaseModel):
     id: Union[int, str]  # client_message_id
     replyTo: Optional[str] = None
     createdAt: Optional[Union[int, float, str]] = None
+    type: Optional[str] = "text"
+    audioUrl: Optional[str] = None
+    durationSeconds: Optional[int] = None
 
 
 
@@ -69,6 +72,9 @@ class ReceiveMessagePayload(BaseModel):
     isEdited: bool = False
     replyTo: Optional[str] = None
     isBot: Optional[bool] = False
+    type: Optional[str] = "text"
+    audioUrl: Optional[str] = None
+    durationSeconds: Optional[int] = None
 
 
 

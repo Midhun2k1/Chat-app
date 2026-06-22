@@ -140,7 +140,10 @@ def get_messages(
             "is_deleted_for_everyone": msg.fld_is_deleted_for_everyone,
             "is_delete_for_me": msg.fld_message_id in deleted_ids,
             "reply_to": parent_msgs_dict[msg.fld_parent_message_id].fld_client_message_id if msg.fld_parent_message_id and msg.fld_parent_message_id in parent_msgs_dict else None,
-            "is_edited": getattr(msg, "fld_is_edited", False)
+            "is_edited": getattr(msg, "fld_is_edited", False),
+            "message_type": getattr(msg, "fld_message_type", "text"),
+            "media_url": storage_service.get_public_url(msg.fld_media_url) if getattr(msg, "fld_media_url", None) else None,
+            "duration_seconds": getattr(msg, "fld_duration_seconds", None)
         }
         for msg in messages
     ]
@@ -203,7 +206,8 @@ def get_user_chats(
         Message.fld_is_deleted_for_everyone.label("last_message_deleted"),
         Message.fld_created_at.label("last_message_time"),
         User.fld_username.label("last_message_sender_username"),
-        func.coalesce(unread_subq.c.unread_count, 0).label("unread_count")
+        func.coalesce(unread_subq.c.unread_count, 0).label("unread_count"),
+        Message.fld_message_type.label("last_message_type")
     ).join(
         ConversationParticipant,
         ConversationParticipant.fld_conversation_id == Conversation.fld_conversation_Id
@@ -292,7 +296,7 @@ def get_user_chats(
             "name": chat_name,
             "type": chat_type,
             "unread_count": chat.unread_count,
-            "last_message_text": "This message was deleted" if getattr(chat, "last_message_deleted", False) else chat.last_message_text,
+            "last_message_text": "This message was deleted" if getattr(chat, "last_message_deleted", False) else ("🎙️ Voice message" if getattr(chat, "last_message_type", "text") == "audio" else chat.last_message_text),
             "updated_at": updated_at_str,
             "avatar_url": chat_avatar,
             "participants": {

@@ -41,7 +41,7 @@ def _build_context(conversation_id: int, bot_user_id: int, db, limit: int = 10) 
     return [
         {
             "role": "assistant" if msg.fld_sender_id == bot_user_id else "user",
-            "content": msg.fld_message,
+            "content": msg.fld_message if getattr(msg, "fld_message_type", "text") != "audio" else "[Voice Message]",
         }
         for msg in messages
     ]

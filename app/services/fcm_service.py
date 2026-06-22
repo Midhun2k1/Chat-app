@@ -126,7 +126,7 @@ class FCMService:
 # Global instance
 fcm_service = FCMService()
 
-async def send_chat_notification(sender_id: int, recipient_ids: list[int], conversation_id: int, text: str, client_msg_id: str):
+async def send_chat_notification(sender_id: int, recipient_ids: list[int], conversation_id: int, text: str, client_msg_id: str, message_type: str = "text"):
     db = SessionLocal()
     try:
         sender = db.query(User).filter(User.fld_user_id == sender_id).first()
@@ -138,7 +138,10 @@ async def send_chat_notification(sender_id: int, recipient_ids: list[int], conve
         if not title:
             title = sender.fld_username
             
-        body = text
+        if message_type == "audio":
+            body = "🎙️ Voice message"
+        else:
+            body = text
         
         valid_recipients = [rid for rid in recipient_ids if rid != sender_id]
         if not valid_recipients:

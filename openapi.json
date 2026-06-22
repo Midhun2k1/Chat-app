@@ -1217,6 +1217,105 @@
         ]
       }
     },
+    "/pingy-details": {
+      "get": {
+        "summary": "Get Pingy Details",
+        "operationId": "get_pingy_details_pingy_details_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardResponse_PingyDetails_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/messages/upload-audio": {
+      "post": {
+        "tags": [
+          "messages"
+        ],
+        "summary": "Upload Audio Message",
+        "operationId": "upload_audio_message_messages_upload_audio_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_audio_message_messages_upload_audio_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/asyncapi.json": {
       "get": {
         "summary": "Get Asyncapi",
@@ -1325,6 +1424,26 @@
           "full_name"
         ],
         "title": "AuthResponseData"
+      },
+      "Body_upload_audio_message_messages_upload_audio_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "title": "Duration Seconds",
+            "description": "Duration of the audio in seconds",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_audio_message_messages_upload_audio_post"
       },
       "Body_upload_avatar_users_avatar_post": {
         "properties": {
@@ -1734,6 +1853,40 @@
               }
             ],
             "title": "Reply To"
+          },
+          "message_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Type",
+            "default": "text"
+          },
+          "media_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Url"
+          },
+          "duration_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Seconds"
           }
         },
         "type": "object",
@@ -1763,6 +1916,39 @@
           "messages"
         ],
         "title": "MessageList"
+      },
+      "PingyDetails": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "chatId": {
+            "type": "string",
+            "title": "Chatid"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "title": "Avatarurl"
+          },
+          "pingyUserId": {
+            "type": "string",
+            "title": "Pingyuserid"
+          },
+          "isEnabled": {
+            "type": "boolean",
+            "title": "Isenabled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "chatId",
+          "avatarUrl",
+          "pingyUserId",
+          "isEnabled"
+        ],
+        "title": "PingyDetails"
       },
       "RefreshTokenRequest": {
         "properties": {
@@ -2070,6 +2256,39 @@
           "message"
         ],
         "title": "StandardResponse[NoneType]"
+      },
+      "StandardResponse_PingyDetails_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "status": {
+            "type": "integer",
+            "title": "Status"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PingyDetails"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "status",
+          "message"
+        ],
+        "title": "StandardResponse[PingyDetails]"
       },
       "StandardResponse_Token_": {
         "properties": {
@@ -2937,6 +3156,42 @@
                 ],
                 "default": false,
                 "title": "Isbot"
+              },
+              "type": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": "text",
+                "title": "Type"
+              },
+              "audioUrl": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Audiourl"
+              },
+              "durationSeconds": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Durationseconds"
               }
             },
             "required": [
@@ -3141,6 +3396,42 @@
             ],
             "default": false,
             "title": "Isbot"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": "text",
+            "title": "Type"
+          },
+          "audioUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Audiourl"
+          },
+          "durationSeconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Durationseconds"
           }
         },
         "required": [

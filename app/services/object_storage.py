@@ -100,30 +100,54 @@ class ObjectStorageService:
             f"/o/{object_name}"
         )
 
-    def get_public_avatar_url(self, avatar_val: Optional[str]) -> Optional[str]:
+    def get_public_url(self, object_name: Optional[str]) -> Optional[str]:
         """
-        Returns the resolved public URL of an avatar.
+        Returns the resolved public URL of any uploaded file/object.
         If it's None/empty, returns None.
         If it's already an absolute URL or a local static path, returns it as-is.
         If OCI client is not initialized, and the file exists locally, returns the local static URL.
         Otherwise, dynamically constructs and returns the OCI URL.
         """
-        if not avatar_val:
+        if not object_name:
             return None
         
         # If it starts with http, https, or /static/, return as is
-        if avatar_val.startswith("http://") or avatar_val.startswith("https://") or avatar_val.startswith("/static/"):
-            return avatar_val
+        if object_name.startswith("http://") or object_name.startswith("https://") or object_name.startswith("/static/"):
+            return object_name
             
         # If OCI client is not initialized, check if local fallback file exists
         if not self.client:
-            local_path = os.path.join("static", "uploads", "avatars", avatar_val)
+            local_path = os.path.join("static", "uploads", "avatars", object_name)
             if os.path.exists(local_path):
                 # Replace backslashes with forward slashes for URLs
-                return f"/static/uploads/avatars/{avatar_val.replace('\\', '/')}"
+                return f"/static/uploads/avatars/{object_name.replace('\\', '/')}"
             
         # Otherwise, resolve as OCI Object name
-        return self.generate_public_url(avatar_val)
+        return self.generate_public_url(object_name)
+
+    def get_public_avatar_url(self, avatar_val: Optional[str]) -> Optional[str]:
+        """
+        Returns the resolved public URL of an avatar.
+        """
+        return self.get_public_url(avatar_val)
 
 # Instantiate a single service instance
 storage_service = ObjectStorageService()
+
+def extract_object_name(url: Optional[str]) -> Optional[str]:
+    """
+    Extracts the relative object name/path from a public URL.
+    Returns None if the url is None/empty.
+    """
+    if not url:
+        return None
+    import urllib.parse
+    # For local fallback URLs: /static/uploads/avatars/audio/uuid.aac
+    if "static/uploads/avatars/" in url:
+        raw_path = url.split("static/uploads/avatars/")[-1]
+        return urllib.parse.unquote(raw_path)
+    # For OCI public URLs: https://.../o/audio/uuid.aac
+    if "/o/" in url:
+        raw_path = url.split("/o/")[-1]
+        return urllib.parse.unquote(raw_path)
+    return url

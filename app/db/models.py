@@ -65,6 +65,9 @@ class Message(Base):
     fld_deleted_for_everyone_at = Column(DateTime(timezone=True), nullable=True)
     fld_parent_message_id = Column(String(100), nullable=True)
     fld_embedding = Column(Vector(384), nullable=True)
+    fld_message_type = Column(String(20), nullable=False, default="text")
+    fld_media_url = Column(Text, nullable=True)
+    fld_duration_seconds = Column(Integer, nullable=True)
 
 
 class MessageDelete(Base):

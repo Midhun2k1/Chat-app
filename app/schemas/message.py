@@ -12,6 +12,9 @@ class MessageItem(BaseModel):
     is_deleted_for_everyone: bool
     is_delete_for_me: bool
     reply_to: Optional[str] = None
+    message_type: Optional[str] = "text"
+    media_url: Optional[str] = None
+    duration_seconds: Optional[int] = None
 
 
 class MessageList(BaseModel):

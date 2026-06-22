@@ -240,6 +240,15 @@ export interface components {
              * @default false
              */
             isBot: boolean | null;
+            /**
+             * Type
+             * @default text
+             */
+            type: string | null;
+            /** Audiourl */
+            audioUrl?: string | null;
+            /** Durationseconds */
+            durationSeconds?: number | null;
         };
         /** SendMessagePayload */
         SendMessagePayload: {
@@ -253,6 +262,15 @@ export interface components {
             replyTo?: string | null;
             /** Createdat */
             createdAt?: number | string | null;
+            /**
+             * Type
+             * @default text
+             */
+            type: string | null;
+            /** Audiourl */
+            audioUrl?: string | null;
+            /** Durationseconds */
+            durationSeconds?: number | null;
         };
         /** TypingBroadcastPayload */
         TypingBroadcastPayload: {

@@ -4,7 +4,7 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from app.api import auth_routes, user_routes, chat_routes, chat_ws, pingy_routes
+from app.api import auth_routes, user_routes, chat_routes, chat_ws, pingy_routes, message_routes
 from app.db.database import engine, get_db
 from app.db import models
 from app.schemas.response import StandardResponse
@@ -16,8 +16,9 @@ models.Base.metadata.create_all(bind=engine)
 import os
 from fastapi.staticfiles import StaticFiles
 
-# Ensure the upload folder exists
+# Ensure the upload folders exist
 os.makedirs("static/uploads/avatars", exist_ok=True)
+os.makedirs("static/uploads/avatars/audio", exist_ok=True)
 
 app = FastAPI()
 
@@ -64,6 +65,7 @@ app.include_router(user_routes.router)
 app.include_router(chat_routes.router)
 app.include_router(chat_ws.router)
 app.include_router(pingy_routes.router)
+app.include_router(message_routes.router)
 
 @app.get("/asyncapi.json")
 def get_asyncapi():
