@@ -42,8 +42,5 @@ def get_pingy_details(current_user = Depends(get_current_user), db: Session = De
         "success": True,
         "status": 200,
         "message": "Pingy details retrieved",
-        "data": {
-            "pingyDetails": data,
-            #"conversationId": conversation_id,
-        },
+        "data": data
     }
