@@ -15,7 +15,7 @@ common_responses = {
     500: {"model": ErrorResponse},
 }
 
-@router.get("/pingy-details", response_model=StandardResponse[dict], responses=common_responses)
+@router.get("/pingy-details", response_model=StandardResponse[PingyDetails], responses=common_responses)
 def get_pingy_details(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
 
     pingy_user = db.query(User).filter(User.fld_user_id == 999).first()
