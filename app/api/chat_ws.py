@@ -45,6 +45,9 @@ async def websocket_endpoint(websocket: WebSocket):
                 data = await websocket.receive_json()
                 ws_msg = WsClientMessage(**data)
                 payload = ws_msg.payload
+            except WebSocketDisconnect:
+                # Propagate disconnect to outer handler
+                raise
             except Exception as e:
                 print(f"WS Wrapper Validation Error: {e}", flush=True)
                 continue
