@@ -3,6 +3,7 @@ import json
 import time
 import urllib.request
 import urllib.parse
+import urllib.error
 import asyncio
 from jose import jwt
 from datetime import datetime, timezone
@@ -95,7 +96,7 @@ class FCMService:
         }
         
         if data:
-            payload["message"]["data"] = {k: str(v) for k, v in data.items()}
+            payload["message"]["data"] = {k: str(v) for k, v in data.items() if v is not None}
             
         try:
             req_data = json.dumps(payload).encode("utf-8")
@@ -110,9 +111,25 @@ class FCMService:
             with urllib.request.urlopen(req, timeout=10) as response:
                 res = json.loads(response.read().decode("utf-8"))
                 return "name" in res
+        except urllib.error.HTTPError as e:
+            print(f"[FCM Service] HTTP Error sending FCM message to token {fcm_token[:15]}...: {e}")
+            if e.code in (404, 410):
+                self._delete_token_from_db(fcm_token)
+            return False
         except Exception as e:
             print(f"[FCM Service] Error sending FCM message to token {fcm_token[:15]}...: {e}")
             return False
+
+    def _delete_token_from_db(self, fcm_token: str):
+        db = SessionLocal()
+        try:
+            db.query(FCMToken).filter(FCMToken.fld_token == fcm_token).delete()
+            db.commit()
+            print(f"[FCM Service] Removed invalid/unregistered token {fcm_token[:15]}... from database")
+        except Exception as db_err:
+            print(f"[FCM Service] Error removing invalid token {fcm_token[:15]}... from database: {db_err}")
+        finally:
+            db.close()
 
     async def send_notification(self, fcm_token: str, title: str, body: str, data: dict = None) -> bool:
         return await asyncio.to_thread(self._send_request_sync, fcm_token, title, body, data)
