@@ -43,9 +43,13 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             try:
                 data = await websocket.receive_json()
+                print("await websocket.receive_json()", data, flush=True)
                 ws_msg = WsClientMessage(**data)
+                print("WsClientMessage(**data)", ws_msg, flush=True)
                 payload = ws_msg.payload
+                print("ws_msg.payload", payload, flush=True)
             except WebSocketDisconnect:
+                print("WebSocket disconnected - 01", payload, flush=True)
                 # Propagate disconnect to outer handler
                 raise
             except Exception as e:
@@ -76,6 +80,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 continue
 
     except WebSocketDisconnect:
+        print("WebSocket disconnected", flush=True)
         manager.disconnect(user_id, websocket)
         await websocket.close()
         await manager.broadcast_online_users()
