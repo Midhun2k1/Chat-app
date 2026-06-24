@@ -32,7 +32,21 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
 
         if not await verify_participant(user_id, conversation_id, db):
             return
-        #print("here is entry point.", flush=True)
+
+        # Avoid duplicate messages
+        existing_msg = db.query(Message).filter(Message.fld_client_message_id == client_msg_id).first()
+        if existing_msg:
+            server_timestamp = format_datetime_to_zulu(datetime.now(timezone.utc))
+            ack_msg = WsServerMessage(
+                event="ACK_SEND_MSG",
+                payload=AckSendMessagePayload(id=client_msg_id, serverTimestamp=server_timestamp),
+                timestamp=server_timestamp
+            )
+            sender_sockets = manager.active_connections.get(user_id, [])
+            for ws in sender_sockets:
+                await ws.send_json(ack_msg.model_dump())
+            return
+
         new_message = Message(
             fld_conversation_id=conversation_id,
             fld_sender_id=user_id,
