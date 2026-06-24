@@ -96,7 +96,7 @@ class FCMService:
         }
         
         if data:
-            payload["message"]["data"] = {k: str(v) for k, v in data.items()}
+            payload["message"]["data"] = {k: str(v) for k, v in data.items() if v is not None}
             
         try:
             req_data = json.dumps(payload).encode("utf-8")
