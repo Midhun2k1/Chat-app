@@ -43,17 +43,17 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             try:
                 data = await websocket.receive_json()
-                print("await websocket.receive_json()", data, flush=True)
+                print("000 - await websocket.receive_json()", data, flush=True)
                 ws_msg = WsClientMessage(**data)
-                print("WsClientMessage(**data)", ws_msg, flush=True)
+                print("001 - WsClientMessage(**data)", ws_msg, flush=True)
                 payload = ws_msg.payload
-                print("ws_msg.payload", payload, flush=True)
+                print("002 - ws_msg.payload", payload, flush=True)
             except WebSocketDisconnect:
-                print("WebSocket disconnected - 01", payload, flush=True)
+                print("003 - WebSocket disconnected - 01", payload, flush=True)
                 # Propagate disconnect to outer handler
                 raise
             except Exception as e:
-                print(f"WS Wrapper Validation Error: {e}", flush=True)
+                print("4 - WS Wrapper Validation Error: {e}", flush=True)
                 continue
 
             from app.schemas.websocket import (
@@ -80,7 +80,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 continue
 
     except WebSocketDisconnect:
-        print("WebSocket disconnected", flush=True)
+        print("5 - WebSocket disconnected", flush=True)
         manager.disconnect(user_id, websocket)
         await websocket.close()
         await manager.broadcast_online_users()
