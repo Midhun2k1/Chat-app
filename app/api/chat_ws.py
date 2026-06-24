@@ -41,8 +41,8 @@ async def websocket_endpoint(websocket: WebSocket):
 
     try:
         while True:
-            data = await websocket.receive_json()
             try:
+                data = await websocket.receive_json()
                 ws_msg = WsClientMessage(**data)
                 payload = ws_msg.payload
             except Exception as e:
@@ -50,31 +50,36 @@ async def websocket_endpoint(websocket: WebSocket):
                 continue
 
             from app.schemas.websocket import (
-                SendMessagePayload, TypingPayload, MessageStatusPayload, 
+                SendMessagePayload, TypingPayload, MessageStatusPayload,
                 PresencePayload, EditMessagePayload,
-                DeleteMultipleMessagesPayload
+                DeleteMultipleMessagesPayload,
             )
 
-            if isinstance(payload, SendMessagePayload):
-                await handle_send_message(user_id, payload, db)
-            elif isinstance(payload, TypingPayload):
-                await handle_typing(user_id, payload, db)
-            elif isinstance(payload, MessageStatusPayload):
-                await handle_message_status(user_id, payload, db)
-            elif isinstance(payload, PresencePayload):
-                await handle_presence(user_id, payload)
-            elif isinstance(payload, EditMessagePayload):
-                await handle_edit_message(user_id, payload, db)
-            elif isinstance(payload, DeleteMultipleMessagesPayload):
-                await handle_delete_messages(user_id, payload, db)
+            try:
+                if isinstance(payload, SendMessagePayload):
+                    await handle_send_message(user_id, payload, db)
+                elif isinstance(payload, TypingPayload):
+                    await handle_typing(user_id, payload, db)
+                elif isinstance(payload, MessageStatusPayload):
+                    await handle_message_status(user_id, payload, db)
+                elif isinstance(payload, PresencePayload):
+                    await handle_presence(user_id, payload)
+                elif isinstance(payload, EditMessagePayload):
+                    await handle_edit_message(user_id, payload, db)
+                elif isinstance(payload, DeleteMultipleMessagesPayload):
+                    await handle_delete_messages(user_id, payload, db)
+            except Exception as handler_err:
+                print(f"Handler error: {handler_err}", flush=True)
+                continue
 
     except WebSocketDisconnect:
-        manager.disconnect(user_id, websocket)  # ✅ FIXED
+        manager.disconnect(user_id, websocket)
+        await websocket.close()
         await manager.broadcast_online_users()
-
-
+    except Exception as e:
+        print(f"Unexpected WS error: {e}", flush=True)
+        manager.disconnect(user_id, websocket)
+        await websocket.close()
+        await manager.broadcast_online_users()
     finally:
         db.close()
-
-
- 
