@@ -3,7 +3,7 @@ import asyncio
 from sqlalchemy.orm import Session
 from .participation import verify_participant
 from app.websocket.manager import manager
-from app.db.models import Message, ConversationParticipant, MessageDelete
+from app.db.models import Message, ConversationParticipant, MessageDelete, User
 from app.utils.time_utils import format_datetime_to_zulu, parse_datetime
 from app.websocket.ai_handler import handle_bot_reply
 from app.services.embedding_service import embed_text
@@ -47,12 +47,21 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
                 await ws.send_json(ack_msg.model_dump())
             return
 
+        # Determine if conversation is with Pingy bot to mark as read
+        is_pingy_conversation = False
+        bot_user = db.query(User).filter(User.fld_username == "pingy", User.fld_is_bot == True).first()
+        if bot_user:
+            is_pingy_conversation = db.query(ConversationParticipant).filter(
+                ConversationParticipant.fld_conversation_id == conversation_id,
+                ConversationParticipant.fld_user_id == bot_user.fld_user_id
+            ).first() is not None
+
         new_message = Message(
             fld_conversation_id=conversation_id,
             fld_sender_id=user_id,
             fld_message=text,
             fld_created_at=parse_datetime(payload.createdAt),
-            fld_is_read=False,
+            fld_is_read=is_pingy_conversation,
             fld_client_message_id=client_msg_id,
             fld_parent_message_id=parent_msg_id
         )
@@ -79,6 +88,18 @@ async def handle_send_message(user_id: int, payload: SendMessagePayload, db: Ses
         sender_sockets = manager.active_connections.get(user_id, [])
         for ws in sender_sockets:
             await ws.send_json(ack_msg.model_dump())
+
+        if is_pingy_conversation:
+            status_msg = WsServerMessage(
+                event="MSG_STATUS",
+                payload=MessageStatusBroadcastPayload(
+                    messageId=str(client_msg_id),
+                    status="read"
+                ),
+                timestamp=server_timestamp
+            )
+            for ws in sender_sockets:
+                await ws.send_json(status_msg.model_dump())
 
         # Get participants
         participants = db.query(ConversationParticipant).filter(

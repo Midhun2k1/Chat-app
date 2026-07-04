@@ -1217,6 +1217,59 @@
         ]
       }
     },
+    "/pingy-details": {
+      "get": {
+        "summary": "Get Pingy Details",
+        "operationId": "get_pingy_details_pingy_details_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardResponse_PingyDetails_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/asyncapi.json": {
       "get": {
         "summary": "Get Asyncapi",
@@ -1764,6 +1817,39 @@
         ],
         "title": "MessageList"
       },
+      "PingyDetails": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "chatId": {
+            "type": "string",
+            "title": "Chatid"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "title": "Avatarurl"
+          },
+          "pingyUserId": {
+            "type": "string",
+            "title": "Pingyuserid"
+          },
+          "isEnabled": {
+            "type": "boolean",
+            "title": "Isenabled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "chatId",
+          "avatarUrl",
+          "pingyUserId",
+          "isEnabled"
+        ],
+        "title": "PingyDetails"
+      },
       "RefreshTokenRequest": {
         "properties": {
           "refresh_token": {
@@ -2070,6 +2156,39 @@
           "message"
         ],
         "title": "StandardResponse[NoneType]"
+      },
+      "StandardResponse_PingyDetails_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "status": {
+            "type": "integer",
+            "title": "Status"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PingyDetails"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "status",
+          "message"
+        ],
+        "title": "StandardResponse[PingyDetails]"
       },
       "StandardResponse_Token_": {
         "properties": {
